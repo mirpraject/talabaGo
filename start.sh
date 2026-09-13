@@ -37,39 +37,29 @@ echo "[*] Python aniqlandi: $($PYTHON_CMD --version)"
 
 # 2. Backend muhitini sozlash
 echo "[1/3] Backend sozlanmoqda..."
-if [ ! -d "backend/.venv" ]; then
-    echo "[*] Virtual muhit yaratilmoqda..."
-    $PYTHON_CMD -m venv backend/.venv || true
+PYTHON_RUN="$PYTHON_CMD"
+
+if ! $PYTHON_CMD -c "import uvicorn, fastapi" &>/dev/null; then
+    echo "[*] Paketlar o'rnatilmoqda..."
+    if [ -f "backend/.venv/bin/python" ]; then
+        PYTHON_RUN="backend/.venv/bin/python"
+    else
+        $PYTHON_CMD -m pip install -q -r backend/requirements.txt || pip install -q -r backend/requirements.txt || true
+    fi
 fi
 
-if [ -f "backend/.venv/bin/pip" ]; then
-    PIP_BIN="backend/.venv/bin/pip"
-    UVICORN_BIN="backend/.venv/bin/uvicorn"
-    PYTHON_RUN="backend/.venv/bin/python"
-else
-    PIP_BIN="pip3"
-    UVICORN_BIN="uvicorn"
-    PYTHON_RUN="$PYTHON_CMD"
-fi
-
-$PIP_BIN install -q -r backend/requirements.txt || pip install -q -r backend/requirements.txt || true
-
-# Bazani birlamchi ma'lumotlar bilan to'ldirish (agar mavjud bo'lmasa)
-$PYTHON_RUN backend/seed.py || python3 backend/seed.py || true
+# Bazani birlamchi ma'lumotlar bilan to'ldirish
+$PYTHON_RUN backend/seed.py || true
 
 # 3. Frontendni sozlash va tayyorlash
-echo "[2/3] Frontend tayyorlanmoqda..."
-cd frontend
-if [ ! -d "node_modules" ]; then
-    npm install
-fi
-
-# Build (agar .next papkasi mavjud bo'lmasa)
-if [ ! -d ".next" ]; then
+echo "[2/3] Frontend tekshirilmoqda..."
+if [ ! -d "frontend/.next" ]; then
     echo "[*] Next.js loyiha yig'ilmoqda (build)..."
+    cd frontend
+    [ ! -d "node_modules" ] && npm install
     npm run build
+    cd ..
 fi
-cd ..
 
 # 4. Serverlarni yagona tizim sifatida ishga tushirish
 PUBLIC_PORT="${PORT:-3000}"
