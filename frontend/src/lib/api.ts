@@ -59,6 +59,8 @@ export async function apiFetch<T>(
         message = "Juda ko'p so'rov yuborildi. Iltimos, biroz kutib qayta urinib ko'ring (429 Rate limit).";
       } else if (res.status === 413) {
         message = "Fayl yoki so'rov hajmi ruxsat etilgan me'yordan katta (Maksimal 50 MB).";
+      } else if (res.status === 502 || res.status === 503 || res.status === 504) {
+        message = "Server hali to'liq ishga tushmadi (yoki qayta yuklanmoqda). Iltimos, bir necha soniyadan so'ng qayta urinib ko'ring.";
       }
       try {
         const data = (await res.json()) as ApiError;
@@ -74,6 +76,9 @@ export async function apiFetch<T>(
     clearTimeout(timeoutId);
     if (err.name === "AbortError") {
       throw new Error("So'rov vaqti tugadi (Timeout). Iltimos, internet aloqasini tekshiring.");
+    }
+    if (err.message?.includes("Failed to fetch") || err.message?.includes("NetworkError")) {
+      throw new Error("Server bilan aloqa o'rnatib bo'lmadi. Backend ishlayotganini tekshiring.");
     }
     throw err;
   }

@@ -75,7 +75,12 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
 
     # Assign unique Student ID and distinct avatar
-    new_user.student_id = f"T{new_user.id:06d}"
+    counter = new_user.id
+    candidate_id = f"T{counter:06d}"
+    while db.query(User).filter(User.student_id == candidate_id, User.id != new_user.id).first():
+        counter += 1
+        candidate_id = f"T{counter:06d}"
+    new_user.student_id = candidate_id
     new_user.avatar_url = f"https://api.dicebear.com/7.x/bottts/svg?seed={new_user.student_id}"
     db.commit()
     db.refresh(new_user)
