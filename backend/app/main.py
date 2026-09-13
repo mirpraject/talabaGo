@@ -46,10 +46,11 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 # Specific Exception Handlers so 4xx errors retain their status code and detail messages
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    extra_headers = getattr(exc, "headers", None) or {}
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail},
-        headers=getattr(exc, "headers", None),
+        headers=extra_headers if extra_headers else None,
     )
 
 @app.exception_handler(RequestValidationError)
