@@ -46,3 +46,8 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def init_db():
+    from .init_db import init_db as _init
+    _init()

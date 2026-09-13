@@ -40,13 +40,44 @@ app = FastAPI(
     redoc_url=None,
 )
 
-# Global Safe Exception Handler (prevents leaking stack traces or internal DB info)
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+# Specific Exception Handlers so 4xx errors retain their status code and detail messages
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers=getattr(exc, "headers", None),
+    )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = exc.errors()
+    detail = "Kiritilgan ma'lumotlarda xatolik bor"
+    if errors:
+        first_err = errors[0]
+        field = first_err.get("loc", [""])[-1]
+        msg = first_err.get("msg", "")
+        if "password" in str(field).lower():
+            detail = "Parol talablarga javob bermaydi (kamida 8 ta belgi, katta va kichik harf hamda raqam bo'lishi shart)"
+        elif "username" in str(field).lower():
+            detail = "Login kamida 3 ta belgidan iborat bo'lishi kerak"
+        else:
+            detail = f"{field}: {msg}"
+    return JSONResponse(
+        status_code=422,
+        content={"detail": detail},
+    )
+
+# Global Safe Exception Handler (for unhandled 500 errors only)
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Xavfsiz ushlangan server xatosi ({request.method} {request.url.path}): {exc}", exc_info=True)
     return JSONResponse(
         status_code=500,
-        content={"detail": "Serverda kutilmagan ichki xatolik yuz berdi. Tizim xatolikni avtomatik qayd etdi."},
+        content={"detail": "Serverda kutilmagan xatolik yuz berdi. Iltimos, qayta urinib ko'ring."},
     )
 
 # Security Middlewares (executed in order)

@@ -13,14 +13,15 @@ import os
 # Backend ildiz yo'lini qo'shish
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from app.database import SessionLocal, init_db
+from app.database import SessionLocal
+from app.init_db import init_db
 from app.models import User, University, Faculty, Subject, Announcement
 from app.security import hash_password
 
 
 def seed_database():
     print("=" * 60)
-    print("   🌱 TalabaGo — Ma'lumotlar bazasini to'ldirish (Seeding)")
+    print("   [*] TalabaGo -- Ma'lumotlar bazasini to'ldirish (Seeding)")
     print("=" * 60)
 
     # 1. Jadvallarni yaratish
@@ -108,7 +109,7 @@ def seed_database():
 
         db.commit()
         print("=" * 60)
-        print("   ✅ Ma'lumotlar bazasi muvaffaqiyatli tayyorlandi!")
+        print("   [OK] Ma'lumotlar bazasi muvaffaqiyatli tayyorlandi!")
         print(f"   Administrator hisobi: {admin_username}")
         print("   Parol: ADMIN_PASSWORD muhit o'zgaruvchisida belgilangan")
         print("=" * 60)
