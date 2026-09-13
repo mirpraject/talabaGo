@@ -1,0 +1,22 @@
+# ==============================================================================
+# TalabaGo — Render Blueprint Configuration (render.yaml)
+# ==============================================================================
+
+services:
+  - type: web
+    name: talabago
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: frankfurt
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        value: sqlite:///studenthub.db
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 1440
+      - key: PORT
+        value: 10000
