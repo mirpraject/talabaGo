@@ -76,12 +76,12 @@ PUBLIC_PORT="${PORT:-3000}"
 echo "[3/3] Serverlar ishga tushirilmoqda..."
 
 # Backend FastAPI (ichki 127.0.0.1:8000 da ishlaydi)
-$UVICORN_BIN app.main:app --app-dir backend --host 127.0.0.1 --port 8000 &
+$PYTHON_RUN -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000 &
 BACKEND_PID=$!
 
 # Frontend Next.js (tashqi $PUBLIC_PORT da tinglaydi va /api so'rovlarini 8000 ga proksi qiladi)
 cd frontend
-npm run start -- -p "$PUBLIC_PORT" -H 0.0.0.0 &
+npx next start -p "$PUBLIC_PORT" -H 0.0.0.0 &
 FRONTEND_PID=$!
 cd ..
 
