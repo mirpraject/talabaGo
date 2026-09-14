@@ -1,11 +1,16 @@
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL !== undefined
-    ? process.env.NEXT_PUBLIC_API_URL
-    : typeof window !== "undefined"
-    ? (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-        ? "http://127.0.0.1:8000"
-        : "")
-    : "http://127.0.0.1:8000";
+function getApiUrl(): string {
+  if (typeof window !== "undefined") {
+    const isLocal =
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1";
+    if (!isLocal) {
+      // Production domain: always use relative URL so Next.js proxy / rewrites handle it seamlessly
+      return "";
+    }
+    return process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+  }
+  return process.env.INTERNAL_API_URL || "http://127.0.0.1:8000";
+}
 
 export const TOKEN_KEY = "studenthub_token";
 
@@ -23,7 +28,8 @@ export function clearToken() {
 }
 
 export type ApiError = {
-  detail?: string;
+  detail?: string | { msg?: string }[] | Record<string, unknown>;
+  message?: string;
 };
 
 export async function apiFetch<T>(
@@ -45,8 +51,9 @@ export async function apiFetch<T>(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 25000);
 
+  const baseUrl = getApiUrl();
   try {
-    const res = await fetch(`${API_URL}${path}`, {
+    const res = await fetch(`${baseUrl}${path}`, {
       ...options,
       headers,
       signal: options.signal || controller.signal,
@@ -54,8 +61,10 @@ export async function apiFetch<T>(
     clearTimeout(timeoutId);
 
     if (!res.ok) {
-      let message = "Serverda xatolik yuz berdi";
-      if (res.status === 429) {
+      let message = `Serverda xatolik yuz berdi (${res.status})`;
+      if (res.status === 401) {
+        message = "Username yoki parol noto'g'ri";
+      } else if (res.status === 429) {
         message = "Juda ko'p so'rov yuborildi. Iltimos, biroz kutib qayta urinib ko'ring (429 Rate limit).";
       } else if (res.status === 413) {
         message = "Fayl yoki so'rov hajmi ruxsat etilgan me'yordan katta (Maksimal 50 MB).";
@@ -63,8 +72,15 @@ export async function apiFetch<T>(
         message = "Server hali to'liq ishga tushmadi (yoki qayta yuklanmoqda). Iltimos, bir necha soniyadan so'ng qayta urinib ko'ring.";
       }
       try {
-        const data = (await res.json()) as ApiError;
-        if (data.detail) message = data.detail;
+        const data = (await res.json()) as any;
+        if (typeof data?.detail === "string") {
+          message = data.detail;
+        } else if (Array.isArray(data?.detail) && data.detail.length > 0) {
+          const first = data.detail[0];
+          message = typeof first === "string" ? first : first.msg || JSON.stringify(first);
+        } else if (data?.message) {
+          message = String(data.message);
+        }
       } catch {
         /* ignore */
       }

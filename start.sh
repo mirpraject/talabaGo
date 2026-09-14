@@ -87,7 +87,7 @@ fi
 echo "[3/3] Backend ishga tushirilmoqda..."
 cd "$APP_DIR/backend"
 nohup $PY -m uvicorn app.main:app \
-    --host 127.0.0.1 \
+    --host 0.0.0.0 \
     --port 8000 \
     --log-level info \
     --workers 1 > /tmp/backend.log 2>&1 &
@@ -115,7 +115,8 @@ except:
 done
 
 if [ $READY -eq 0 ]; then
-    echo "[!] Backend 20s da tayyor bo'lmadi, lekin davom etilmoqda..."
+    echo "[!] Backend 20s da tayyor bo'lmadi! Loglar:"
+    cat /tmp/backend.log 2>/dev/null || true
 fi
 
 # 6. Frontend ASOSIY PROCESS sifatida ishga tushirish (exec)
