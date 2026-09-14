@@ -46,7 +46,7 @@ except Exception as e:
     print(f'[DB] Xatolik: {e}')
 
 admin_user = __import__('os').environ.get('ADMIN_USERNAME', 'admin')
-admin_pass = __import__('os').environ.get('ADMIN_PASSWORD', 'Admin123!')
+admin_pass = __import__('os').environ.get('ADMIN_PASSWORD', 'admin123')
 try:
     from app.database import SessionLocal
     from app.models.user import User
@@ -66,8 +66,10 @@ try:
     else:
         admin.is_admin = True
         admin.is_active = True
+        admin.is_blocked = False
+        admin.hashed_password = hash_password(admin_pass)
         db.commit()
-        print(f'[DB] Admin mavjud: {admin_user}')
+        print(f'[DB] Admin yangilandi: {admin_user}')
     db.close()
 except Exception as e:
     print(f'[DB] Admin xatolik: {e}')
@@ -86,11 +88,11 @@ fi
 # 5. Backend uvicorn ishga tushirish (fon jarayoni)
 echo "[3/3] Backend ishga tushirilmoqda..."
 cd "$APP_DIR/backend"
-nohup $PY -m uvicorn app.main:app \
+$PY -m uvicorn app.main:app \
     --host 0.0.0.0 \
     --port 8000 \
     --log-level info \
-    --workers 1 > /tmp/backend.log 2>&1 &
+    --workers 1 &
 BACKEND_PID=$!
 cd "$APP_DIR"
 echo "[*] Backend PID: $BACKEND_PID"
@@ -115,16 +117,27 @@ except:
 done
 
 if [ $READY -eq 0 ]; then
-    echo "[!] Backend 20s da tayyor bo'lmadi! Loglar:"
-    cat /tmp/backend.log 2>/dev/null || true
+    echo "[!] Backend 20s da tayyor bo'lmadi, lekin davom etilmoqda..."
 fi
 
-# 6. Frontend ASOSIY PROCESS sifatida ishga tushirish (exec)
+# 6. Serverlarni parallel ishga tushirish (Supervisor)
 PUBLIC_PORT="${PORT:-3000}"
 echo "======================================================="
-echo "  Backend:  http://127.0.0.1:8000"
+echo "  Backend:  http://0.0.0.0:8000"
 echo "  Frontend: http://0.0.0.0:$PUBLIC_PORT"
 echo "======================================================="
 
 cd "$APP_DIR/frontend"
-exec npx next start -p "$PUBLIC_PORT" -H 0.0.0.0
+npx next start -p "$PUBLIC_PORT" -H 0.0.0.0 &
+FRONTEND_PID=$!
+cd "$APP_DIR"
+
+cleanup() {
+    echo "[*] Serverlar to'xtatilmoqda..."
+    kill -TERM $BACKEND_PID $FRONTEND_PID 2>/dev/null || true
+    exit 0
+}
+trap cleanup SIGINT SIGTERM EXIT
+
+echo "[OK] TalabaGo muvaffaqiyatli ishga tushdi!"
+wait -n $BACKEND_PID $FRONTEND_PID

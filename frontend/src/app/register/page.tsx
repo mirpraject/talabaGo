@@ -49,12 +49,9 @@ export default function RegisterPage() {
   }, []);
 
   const requirements = [
-    { ok: password.length >= 8, label: "Kamida 8 ta belgi" },
-    { ok: /[A-Z]/.test(password), label: "Katta harf (A-Z)" },
-    { ok: /[a-z]/.test(password), label: "Kichik harf (a-z)" },
-    { ok: /\d/.test(password), label: "Raqam (0-9)" },
+    { ok: password.length >= 6, label: "Kamida 6 ta belgi" },
   ];
-  const allOk = requirements.every((r) => r.ok);
+  const allOk = password.length >= 6;
 
   async function handleRegister() {
     setError("");
@@ -68,7 +65,7 @@ export default function RegisterPage() {
       return;
     }
     if (!allOk) {
-      setError("Parol barcha talablarga javob berishi shart");
+      setError("Parol kamida 6 ta belgidan iborat bo'lishi kerak");
       return;
     }
     if (password !== confirmPassword) {

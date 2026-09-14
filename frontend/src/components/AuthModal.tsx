@@ -76,12 +76,9 @@ export default function AuthModal() {
 
   // Password requirements for register
   const requirements = [
-    { ok: regPassword.length >= 8, label: "Kamida 8 ta belgi" },
-    { ok: /[A-Z]/.test(regPassword), label: "Katta harf (A-Z)" },
-    { ok: /[a-z]/.test(regPassword), label: "Kichik harf (a-z)" },
-    { ok: /\d/.test(regPassword), label: "Raqam (0-9)" },
+    { ok: regPassword.length >= 6, label: "Kamida 6 ta belgi" },
   ];
-  const allRequirementsOk = requirements.every((r) => r.ok);
+  const allRequirementsOk = regPassword.length >= 6;
 
   async function handleLoginSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -119,7 +116,7 @@ export default function AuthModal() {
       return;
     }
     if (!allRequirementsOk) {
-      setError("Parol barcha xavfsizlik talablariga javob berishi shart");
+      setError("Parol kamida 6 ta belgidan iborat bo'lishi kerak");
       return;
     }
     if (regPassword !== regConfirmPassword) {

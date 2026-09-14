@@ -16,14 +16,8 @@ class UserBase(BaseModel):
 
 
 def validate_password(v: str) -> str:
-    if len(v) < 8:
-        raise ValueError("password must be at least 8 characters")
-    if not re.search(r"[a-z]", v):
-        raise ValueError("password must contain a lowercase letter")
-    if not re.search(r"[A-Z]", v):
-        raise ValueError("password must contain an uppercase letter")
-    if not re.search(r"\d", v):
-        raise ValueError("password must contain a digit")
+    if len(v) < 6:
+        raise ValueError("Parol kamida 6 ta belgidan iborat bo'lishi kerak")
     return v
 
 
