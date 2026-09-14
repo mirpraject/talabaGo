@@ -1,20 +1,18 @@
 #!/bin/bash
 # ==============================================================================
-# TalabaGo — Yagona Server Ishga Tushirish Skripti
-# Backend (FastAPI) ichki 127.0.0.1:8000
-# Frontend (Next.js) tashqi $PORT da — asosiy process
+# TalabaGo v2.0 — Yagona Server (Unified, backend/ va frontend/ yo'q)
+# FastAPI  → ichki port 8000  (app/ papkasidan)
+# Next.js  → tashqi $PORT    (src/ papkasidan, ildizda build)
 # ==============================================================================
-
-# set -e olib tashlandi: xato bo'lsa ham davom etsin
 
 APP_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo "======================================================="
-echo "  TALABAGO -- SERVER ISHGA TUSHIRISH"
+echo "  TALABAGO v2.0 — UNIFIED"
 echo "  Dir: $APP_DIR"
 echo "======================================================="
 
-# 1. Python buyrug'ini aniqlash
+# Python versiyasini aniqlash
 if command -v python3 >/dev/null 2>&1; then
     PY="python3"
 elif command -v python >/dev/null 2>&1; then
@@ -23,34 +21,35 @@ else
     echo "XATOLIK: Python topilmadi!"
     exit 1
 fi
-echo "[*] Python: $($PY --version 2>&1)"
+echo "[*] $($PY --version 2>&1)"
+echo "[*] Node $(node --version 2>&1)"
 
-# 2. Backend pakettlarini tekshirish
+# Python paketlari (ildiz requirements.txt)
 if ! $PY -c "import uvicorn" >/dev/null 2>&1; then
-    echo "[*] uvicorn topilmadi, o'rnatilmoqda..."
-    $PY -m pip install --quiet -r "$APP_DIR/backend/requirements.txt" || true
+    echo "[*] Paketlar o'rnatilmoqda..."
+    $PY -m pip install --quiet -r "$APP_DIR/requirements.txt" || true
 fi
 
-# 3. Ma'lumotlar bazasini yaratish / yangilash
+# ─── 1. Baza tayyorlash ────────────────────────────────────────
 echo "[1/3] Baza tayyorlanmoqda..."
-(
-    cd "$APP_DIR/backend"
-    $PY -c "
+cd "$APP_DIR"
+$PY -c "
 import sys
 sys.path.insert(0, '.')
 try:
-    from app.init_db import init_db
+    from server.init_db import init_db
     init_db()
     print('[DB] Schema tayyor.')
 except Exception as e:
-    print(f'[DB] Xatolik: {e}')
+    print(f'[DB] Schema xatolik: {e}')
 
-admin_user = __import__('os').environ.get('ADMIN_USERNAME', 'admin')
-admin_pass = __import__('os').environ.get('ADMIN_PASSWORD', 'admin123')
+import os
+admin_user = os.environ.get('ADMIN_USERNAME', 'admin')
+admin_pass = os.environ.get('ADMIN_PASSWORD', 'admin123')
 try:
-    from app.database import SessionLocal
-    from app.models.user import User
-    from app.security import hash_password
+    from server.database import SessionLocal
+    from server.models.user import User
+    from server.security import hash_password
     db = SessionLocal()
     admin = db.query(User).filter(User.username == admin_user).first()
     if not admin:
@@ -73,71 +72,65 @@ try:
     db.close()
 except Exception as e:
     print(f'[DB] Admin xatolik: {e}')
-" 2>&1
-) || true
+" 2>&1 || true
 
-# 4. Frontend build tekshirish
+# ─── 2. Next.js build tekshirish ──────────────────────────────
 echo "[2/3] Frontend tekshirilmoqda..."
-if [ ! -d "$APP_DIR/frontend/.next" ]; then
-    echo "[*] Next.js build qilinmoqda..."
-    cd "$APP_DIR/frontend"
-    [ ! -d "node_modules" ] && npm install --quiet 2>&1
-    npm run build 2>&1
+if [ ! -d "$APP_DIR/.next" ]; then
+    echo "[*] Next.js build topilmadi, build qilinmoqda..."
+    cd "$APP_DIR"
+    if [ ! -d "node_modules" ]; then
+        echo "[*] npm install..."
+        npm ci 2>&1 || npm install 2>&1
+    fi
+    NODE_ENV=production npm run build 2>&1
 fi
+cd "$APP_DIR"
 
-# 5. Backend uvicorn ishga tushirish (fon jarayoni)
-echo "[3/3] Backend ishga tushirilmoqda..."
-cd "$APP_DIR/backend"
-$PY -m uvicorn app.main:app \
-    --host 0.0.0.0 \
+# ─── 3. FastAPI uvicorn fon jarayoni ──────────────────────────
+echo "[3/3] FastAPI ishga tushirilmoqda (port 8000)..."
+cd "$APP_DIR"
+$PY -m uvicorn server.main:app \
+    --host 127.0.0.1 \
     --port 8000 \
-    --log-level info \
+    --log-level warning \
     --workers 1 &
 BACKEND_PID=$!
-cd "$APP_DIR"
-echo "[*] Backend PID: $BACKEND_PID"
+echo "[*] FastAPI PID: $BACKEND_PID"
 
-# Backend tayyor bo'lishini kutish (max 20 soniya)
-echo "[*] Backend tayyor bo'lishini kutilmoqda..."
+# Backend tayyor bo'lishini kutish (max 30s)
 READY=0
-for i in $(seq 1 20); do
+for i in $(seq 1 30); do
     sleep 1
     if $PY -c "
-import urllib.request, urllib.error
+import urllib.request
 try:
     urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)
     exit(0)
 except:
     exit(1)
 " >/dev/null 2>&1; then
-        echo "[*] Backend tayyor! (${i}s)"
+        echo "[OK] FastAPI tayyor! (${i}s)"
         READY=1
         break
     fi
 done
+[ $READY -eq 0 ] && echo "[!] FastAPI 30s da tayyor bo'lmadi, davom etilmoqda..."
 
-if [ $READY -eq 0 ]; then
-    echo "[!] Backend 20s da tayyor bo'lmadi, lekin davom etilmoqda..."
-fi
-
-# 6. Serverlarni parallel ishga tushirish (Supervisor)
+# ─── 4. Next.js asosiy jarayon ────────────────────────────────
 PUBLIC_PORT="${PORT:-3000}"
 echo "======================================================="
-echo "  Backend:  http://0.0.0.0:8000"
-echo "  Frontend: http://0.0.0.0:$PUBLIC_PORT"
+echo "  FastAPI:  http://127.0.0.1:8000  (ichki)"
+echo "  Next.js:  http://0.0.0.0:$PUBLIC_PORT  (tashqi)"
 echo "======================================================="
 
-cd "$APP_DIR/frontend"
-npx next start -p "$PUBLIC_PORT" -H 0.0.0.0 &
-FRONTEND_PID=$!
-cd "$APP_DIR"
-
 cleanup() {
-    echo "[*] Serverlar to'xtatilmoqda..."
-    kill -TERM $BACKEND_PID $FRONTEND_PID 2>/dev/null || true
+    echo "[*] To'xtatilmoqda..."
+    kill -TERM $BACKEND_PID 2>/dev/null || true
     exit 0
 }
 trap cleanup SIGINT SIGTERM EXIT
 
-echo "[OK] TalabaGo muvaffaqiyatli ishga tushdi!"
-wait -n $BACKEND_PID $FRONTEND_PID
+echo "[OK] TalabaGo v2.0 ishga tushdi!"
+cd "$APP_DIR"
+exec npx next start -p "$PUBLIC_PORT" -H 0.0.0.0

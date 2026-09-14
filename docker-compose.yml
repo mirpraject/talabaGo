@@ -1,10 +1,10 @@
 # ==============================================================================
-# TalabaGo (StudentHUB) — Single-Server All-in-One Deployment
-# Backend (FastAPI) + Frontend (Next.js) + Database (PostgreSQL) + Nginx Proxy
+# TalabaGo v2.0 — Yagona Server All-in-One Docker Compose
+# Hammasi bitta loyihada (FastAPI + Next.js yagona konteynerda)
 # ==============================================================================
 
 services:
-  # 1. Database Service (PostgreSQL 16)
+  # 1. Database (PostgreSQL 16)
   db:
     image: postgres:16-alpine
     container_name: talabago_db
@@ -24,57 +24,30 @@ services:
     networks:
       - talabago_net
 
-  # 2. Backend Service (FastAPI)
-  backend:
+  # 2. Unified App (Next.js + FastAPI)
+  app:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
-    container_name: talabago_backend
+    container_name: talabago_app
     restart: always
     depends_on:
       db:
         condition: service_healthy
+    ports:
+      - "3000:3000"
+      - "8000:8000"
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-talabago}:${POSTGRES_PASSWORD:-talabago_secure_pass_2026}@db:5432/${POSTGRES_DB:-talabago}
-      SECRET_KEY: ${SECRET_KEY:-your_super_secret_jwt_key_here}
+      SECRET_KEY: ${SECRET_KEY:-talabago_secret_key_2026_jwt}
       ALGORITHM: ${ALGORITHM:-HS256}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      PORT: 3000
     volumes:
-      - ./backend/uploads:/app/uploads
-    networks:
-      - talabago_net
-
-  # 3. Frontend Service (Next.js)
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: talabago_frontend
-    restart: always
-    depends_on:
-      - backend
-    environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
-    networks:
-      - talabago_net
-
-  # 4. Nginx Reverse Proxy (Unified Single-Server Entrypoint)
-  nginx:
-    image: nginx:alpine
-    container_name: talabago_proxy
-    restart: always
-    depends_on:
-      - backend
-      - frontend
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./backend/uploads:/var/www/uploads:ro
+      - ./uploads:/app/uploads
     networks:
       - talabago_net
 

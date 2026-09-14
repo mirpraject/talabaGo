@@ -1,44 +1,42 @@
 @echo off
 chcp 65001 > nul
-title StudentHUB — Akademik Platforma
+title TalabaGo — Yagona Akademik Platforma
 cd /d "%~dp0"
 
 echo =======================================================
-echo          STUDENTHUB — AKADEMIK PLATFORMA
+echo          TALABAGO — YAGONA AKADEMIK PLATFORMA
 echo =======================================================
 echo.
 
-rem ---- 1. Backend Python muhitini tekshirish va sozlash ----
-echo [1/3] Backend muhitini sozlash...
-if not exist "backend\.venv\Scripts\python.exe" (
+rem ---- 1. Python virtual muhitini tekshirish ----
+echo [1/3] Python muhitini sozlash...
+if not exist ".venv\Scripts\python.exe" (
     echo Python virtual muhiti yaratilmoqda...
-    python -m venv backend\.venv
+    python -m venv .venv
 )
 
-echo Backend kutubxonalarini tekshirish...
-backend\.venv\Scripts\python.exe -m pip install -q -r backend\requirements.txt
+echo Kutubxonalarni tekshirish...
+.venv\Scripts\python.exe -m pip install -q -r requirements.txt
 
 rem ---- 2. FastAPI backend serverini ishga tushirish ----
-echo [2/3] FastAPI backend ishga tushirilmoqda (http://localhost:8000)...
-start "StudentHUB Backend (FastAPI)" cmd /k "cd /d ""%~dp0backend"" && .venv\Scripts\python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+echo [2/3] API server ishga tushirilmoqda (http://127.0.0.1:8000)...
+start "TalabaGo API" cmd /k "cd /d ""%~dp0"" && .venv\Scripts\python.exe -m uvicorn server.main:app --host 127.0.0.1 --port 8000 --reload"
 
-rem ---- 3. Frontend bog'liqliklarini tekshirish va ishga tushirish ----
-echo [3/3] Frontend sozlanmoqda...
-if not exist "frontend\node_modules" (
-    echo Frontend paketlari o'rnatilmoqda (npm install)...
-    cd frontend
+rem ---- 3. Frontend paketlari va Next.js ishga tushirish ----
+echo [3/3] Web interfeys sozlanmoqda...
+if not exist "node_modules" (
+    echo Paketlar o'rnatilmoqda (npm install)...
     call npm install
-    cd ..
 )
 
-echo Next.js frontend ishga tushirilmoqda (http://localhost:3000)...
-start "StudentHUB Frontend (Next.js)" cmd /k "cd /d ""%~dp0frontend"" && npm run dev -- -p 3000"
+echo Next.js ishga tushirilmoqda (http://localhost:3000)...
+start "TalabaGo Web" cmd /k "cd /d ""%~dp0"" && npm run dev -- -p 3000"
 
-rem ---- Saytni brauzerda ochish ----
+rem ---- Brauzerda ochish ----
 timeout /t 3 /nobreak > nul
 echo.
 echo =======================================================
-echo  StudentHUB muvaffaqiyatli ishga tushdi!
-echo  Brauzer ochilmoqda: http://localhost:3000
+echo  TalabaGo muvaffaqiyatli ishga tushdi!
+echo  Sayt ochilmoqda: http://localhost:3000
 echo =======================================================
 start http://localhost:3000

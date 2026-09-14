@@ -32,8 +32,8 @@ if [ ! -f ".env" ]; then
 fi
 
 # 3. Uploads papkasi va ruxsatlar
-mkdir -p backend/uploads
-chmod -R 777 backend/uploads
+mkdir -p uploads
+chmod -R 777 uploads
 
 # 4. Konteynerlarni birgalikda yagona serverda ishga tushirish
 echo "[*] Barcha xizmatlar (Database + Backend + Frontend + Nginx) yig'ilmoqda va ishga tushirilmoqda..."

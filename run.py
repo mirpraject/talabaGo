@@ -1,6 +1,6 @@
 """
-StudentHUB — Yagona Ishga Tushiruvchi Skript (Unified Runner)
-Bu skript orqali backend (FastAPI) va frontend (Next.js) bitta buyruq bilan birgalikda ishga tushadi.
+TalabaGo — Yagona Birlashgan Ishga Tushiruvchi Skript
+FastAPI (app/) va Next.js (src/) bitta papkada, yagona muhitda ishlaydi.
 """
 
 import os
@@ -11,11 +11,9 @@ import threading
 import webbrowser
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-BACKEND_DIR = os.path.join(ROOT_DIR, "backend")
-FRONTEND_DIR = os.path.join(ROOT_DIR, "frontend")
 
 # Python executable aniqlash
-VENV_PYTHON = os.path.join(BACKEND_DIR, ".venv", "Scripts", "python.exe")
+VENV_PYTHON = os.path.join(ROOT_DIR, ".venv", "Scripts", "python.exe")
 if os.path.exists(VENV_PYTHON):
     PYTHON_EXE = VENV_PYTHON
 else:
@@ -31,23 +29,21 @@ def stream_output(pipe, prefix, color_code):
         for line in iter(pipe.readline, ''):
             if not line:
                 break
-            # Rangli prefix bilan konsolga chiqarish
             print(f"\033[{color_code}m[{prefix}]\033[0m {line.rstrip()}")
     except Exception:
         pass
 
 def run_backend():
-    print("\033[94m[*] Backend ishga tushirilmoqda (FastAPI: http://127.0.0.1:8000)...\033[0m")
+    print("\033[94m[*] API server ishga tushirilmoqda (FastAPI: http://127.0.0.1:8000)...\033[0m")
     is_prod = os.environ.get("STUDENTHUB_PROD", "0") == "1"
     if is_prod:
         workers = str(max(2, os.cpu_count() or 4))
-        print(f"\033[94m[*] Ishga tushirish: Yuqori yuklama rejimi ({workers} ta Uvicorn worker)...\033[0m")
-        cmd = [PYTHON_EXE, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000", "--workers", workers]
+        cmd = [PYTHON_EXE, "-m", "uvicorn", "server.main:app", "--host", "127.0.0.1", "--port", "8000", "--workers", workers]
     else:
-        cmd = [PYTHON_EXE, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000", "--reload"]
+        cmd = [PYTHON_EXE, "-m", "uvicorn", "server.main:app", "--host", "127.0.0.1", "--port", "8000", "--reload"]
     proc = subprocess.Popen(
         cmd,
-        cwd=BACKEND_DIR,
+        cwd=ROOT_DIR,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -56,15 +52,15 @@ def run_backend():
         errors="replace",
     )
     processes.append(proc)
-    threading.Thread(target=stream_output, args=(proc.stdout, "BACKEND", "94"), daemon=True).start()
+    threading.Thread(target=stream_output, args=(proc.stdout, "API", "94"), daemon=True).start()
     return proc
 
 def run_frontend():
-    print("\033[92m[*] Frontend ishga tushirilmoqda (Next.js: http://localhost:3000)...\033[0m")
+    print("\033[92m[*] Web interfeys ishga tushirilmoqda (Next.js: http://localhost:3000)...\033[0m")
     cmd = [NPM_CMD, "run", "dev"]
     proc = subprocess.Popen(
         cmd,
-        cwd=FRONTEND_DIR,
+        cwd=ROOT_DIR,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -73,11 +69,11 @@ def run_frontend():
         errors="replace",
     )
     processes.append(proc)
-    threading.Thread(target=stream_output, args=(proc.stdout, "FRONTEND", "92"), daemon=True).start()
+    threading.Thread(target=stream_output, args=(proc.stdout, "WEB", "92"), daemon=True).start()
     return proc
 
 def open_browser():
-    time.sleep(4)
+    time.sleep(3)
     url = "http://localhost:3000"
     print(f"\033[95m[*] Brauzer ochilmoqda: {url}\033[0m")
     try:
@@ -87,12 +83,12 @@ def open_browser():
 
 def main():
     print("=" * 65)
-    print("         TalabaGo — Birlashgan Yagona Platforma")
+    print("         TalabaGo — Yagona Birlashgan Platforma")
     print("=" * 65)
-    print("  * Sayt manzili:        http://localhost:3000")
+    print("  * Web sayt manzili:    http://localhost:3000")
     print("  * Admin Panel:         http://localhost:3000/admin")
-    print("  * Backend API:         http://127.0.0.1:8000")
-    print("  * Ma'lumotlar bazasi:  SQLite (backend/studenthub.db)")
+    print("  * API Server:          http://127.0.0.1:8000")
+    print("  * Ma'lumotlar bazasi:  SQLite (studenthub.db)")
     print("=" * 65)
     print("To'xtatish uchun klaviaturada Ctrl + C bosing.\n")
 
@@ -104,7 +100,6 @@ def main():
     try:
         while True:
             time.sleep(1)
-            # Agar birorta jarayon to'xtab qolsa
             for p in processes:
                 if p.poll() is not None:
                     print(f"Jarayon to'xtadi (kod: {p.returncode})")
