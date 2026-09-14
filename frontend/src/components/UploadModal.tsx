@@ -10,7 +10,12 @@ type Props = {
   onSuccess: () => void;
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL !== undefined
+    ? process.env.NEXT_PUBLIC_API_URL
+    : typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+    ? "http://127.0.0.1:8000"
+    : "";
 
 export default function UploadModal({ onClose, onSuccess }: Props) {
   const [universities, setUniversities] = useState<{ id: number; name: string }[]>([]);

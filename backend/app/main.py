@@ -119,6 +119,12 @@ def on_startup():
                 logger.info("Baza bo'sh, boshlang'ich ma'lumotlar (seed) yuklanmoqda...")
                 seed(db)
                 logger.info("Boshlang'ich ma'lumotlar muvaffaqiyatli yuklandi.")
+            from .models import Test
+            from .seed_all import seed_all
+            if db.query(Test).count() == 0:
+                logger.info("Testlar bazasi bo'sh, barcha testlar generatsiya qilinmoqda...")
+                seed_all(db)
+                logger.info("Testlar muvaffaqiyatli generatsiya qilindi.")
         finally:
             db.close()
     except Exception as e:
