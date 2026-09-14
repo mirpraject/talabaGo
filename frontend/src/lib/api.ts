@@ -1,4 +1,4 @@
-function getApiUrl(): string {
+export function getApiUrl(): string {
   if (typeof window !== "undefined") {
     const isLocal =
       window.location.hostname === "localhost" ||
@@ -11,6 +11,8 @@ function getApiUrl(): string {
   }
   return process.env.INTERNAL_API_URL || "http://127.0.0.1:8000";
 }
+
+export const API_URL = "";
 
 export const TOKEN_KEY = "studenthub_token";
 
@@ -126,12 +128,13 @@ export async function downloadBlob(path: string): Promise<Blob> {
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const res = await fetch(`${API_URL}${path}`, { headers });
+  const baseUrl = getApiUrl();
+  const res = await fetch(`${baseUrl}${path}`, { headers });
   if (!res.ok) {
     let message = "Faylni yuklab olishda xatolik yuz berdi";
     try {
       const data = (await res.json()) as ApiError;
-      if (data.detail) message = data.detail;
+      if (typeof data?.detail === "string") message = data.detail;
     } catch {
       /* ignore */
     }
@@ -146,7 +149,8 @@ export async function postBlob(path: string, body?: unknown): Promise<Blob> {
   headers["Content-Type"] = "application/json";
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const res = await fetch(`${API_URL}${path}`, {
+  const baseUrl = getApiUrl();
+  const res = await fetch(`${baseUrl}${path}`, {
     method: "POST",
     headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
@@ -155,7 +159,7 @@ export async function postBlob(path: string, body?: unknown): Promise<Blob> {
     let message = "Yuklab olishda xatolik yuz berdi";
     try {
       const data = (await res.json()) as ApiError;
-      if (data.detail) message = data.detail;
+      if (typeof data?.detail === "string") message = data.detail;
     } catch {
       /* ignore */
     }
