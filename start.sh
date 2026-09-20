@@ -93,7 +93,7 @@ cd "$APP_DIR"
 $PY -m uvicorn server.main:app \
     --host 127.0.0.1 \
     --port 8000 \
-    --log-level warning \
+    --log-level info \
     --workers 1 &
 BACKEND_PID=$!
 echo "[*] FastAPI PID: $BACKEND_PID"
@@ -102,6 +102,10 @@ echo "[*] FastAPI PID: $BACKEND_PID"
 READY=0
 for i in $(seq 1 30); do
     sleep 1
+    if ! kill -0 $BACKEND_PID 2>/dev/null; then
+        echo "[XATOLIK] FastAPI jarayoni to'xtab qoldi (PID: $BACKEND_PID)!"
+        break
+    fi
     if $PY -c "
 import urllib.request
 try:
@@ -110,12 +114,12 @@ try:
 except:
     exit(1)
 " >/dev/null 2>&1; then
-        echo "[OK] FastAPI tayyor! (${i}s)"
+        echo "[OK] FastAPI muvaffaqiyatli tayyor! (${i}s)"
         READY=1
         break
     fi
 done
-[ $READY -eq 0 ] && echo "[!] FastAPI 30s da tayyor bo'lmadi, davom etilmoqda..."
+[ $READY -eq 0 ] && echo "[!] FastAPI kutish yakunlandi, davom etilmoqda..."
 
 # ─── 4. Next.js asosiy jarayon ────────────────────────────────
 PUBLIC_PORT="${PORT:-3000}"

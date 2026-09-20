@@ -121,26 +121,31 @@ app.include_router(learning_router)
 @app.on_event("startup")
 def on_startup():
     init_db()
-    try:
-        from .database import SessionLocal
-        from .models import University
-        from .seed import seed
-        db = SessionLocal()
+
+    def run_seeds():
         try:
-            if db.query(University).count() == 0:
-                logger.info("Baza bo'sh, boshlang'ich ma'lumotlar (seed) yuklanmoqda...")
-                seed(db)
-                logger.info("Boshlang'ich ma'lumotlar muvaffaqiyatli yuklandi.")
-            from .models import Test
-            from .seed_all import seed_all
-            if db.query(Test).count() == 0:
-                logger.info("Testlar bazasi bo'sh, barcha testlar generatsiya qilinmoqda...")
-                seed_all(db)
-                logger.info("Testlar muvaffaqiyatli generatsiya qilindi.")
-        finally:
-            db.close()
-    except Exception as e:
-        logger.warning(f"Boshlang'ich ma'lumotlarni tekshirishda xatolik: {e}")
+            from .database import SessionLocal
+            from .models import University
+            from .seed import seed
+            db = SessionLocal()
+            try:
+                if db.query(University).count() == 0:
+                    logger.info("Baza bo'sh, boshlang'ich ma'lumotlar (seed) yuklanmoqda...")
+                    seed(db)
+                    logger.info("Boshlang'ich ma'lumotlar muvaffaqiyatli yuklandi.")
+                from .models import Test
+                from .seed_all import seed_all
+                if db.query(Test).count() == 0:
+                    logger.info("Testlar bazasi bo'sh, barcha testlar generatsiya qilinmoqda...")
+                    seed_all(db)
+                    logger.info("Testlar muvaffaqiyatli generatsiya qilindi.")
+            finally:
+                db.close()
+        except Exception as e:
+            logger.warning(f"Boshlang'ich ma'lumotlarni tekshirishda xatolik: {e}")
+
+    import threading
+    threading.Thread(target=run_seeds, daemon=True).start()
 
 # Root API endpoint for health check
 @app.get("/health")
