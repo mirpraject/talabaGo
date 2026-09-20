@@ -29,6 +29,8 @@ export default function RegisterPage() {
 
   const [isSuccess, setIsSuccess] = useState(false);
   const [successFullName, setSuccessFullName] = useState("");
+  const [authRequiredNotice, setAuthRequiredNotice] = useState(false);
+  const [redirectTarget, setRedirectTarget] = useState("/files");
 
   useEffect(() => {
     setFullName("");

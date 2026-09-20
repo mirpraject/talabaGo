@@ -16,40 +16,64 @@ import {
   Terminal,
   Loader2,
   Check,
+  Shield,
+  Layers,
 } from "lucide-react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import RequireAuth from "@/components/RequireAuth";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { api } from "@/lib/api";
+import { getTierConfig, SubscriptionTier } from "@/lib/subscription";
+
+type PlanInfo = {
+  tier: "free" | "plus" | "plus_plus";
+  name: string;
+  badge: string;
+  price_uzs: number;
+  star_rate: number;
+  test_limit: number | null;
+  duration_days: number;
+  color: string;
+  hex: string;
+  features: string[];
+};
 
 type SubscriptionStatus = {
   is_premium: boolean;
+  subscription_tier: "free" | "plus" | "plus_plus";
+  tier_name: string;
+  star_rate: number;
+  tests_taken: number;
+  test_limit: number | null;
   premium_expires: string | null;
-  plan: {
-    name: string;
-    price_uzs: number;
-    duration_days: number;
-    features: string[];
-  };
+  plans: PlanInfo[];
+  current_plan: PlanInfo;
 };
 
 export default function PremiumPage() {
   const { user, refreshUser } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
 
   const [status, setStatus] = useState<SubscriptionStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
+  const [selectedTier, setSelectedTier] = useState<"plus" | "plus_plus">("plus_plus");
   const [selectedMethod, setSelectedMethod] = useState<"click" | "payme" | "uzum">("click");
   const [successNotice, setSuccessNotice] = useState(false);
   const [errorNotice, setErrorNotice] = useState("");
+
+  const currentTier = (user?.subscription_tier || status?.subscription_tier || "free") as SubscriptionTier;
+  const userTierConfig = getTierConfig(user);
 
   useEffect(() => {
     async function fetchStatus() {
       try {
         const res = await api.get<SubscriptionStatus>("/api/subscription/status");
         setStatus(res);
+        if (res.subscription_tier === "plus") {
+          setSelectedTier("plus_plus");
+        }
       } catch (err) {
         console.error("Error loading subscription status:", err);
       } finally {
@@ -59,11 +83,12 @@ export default function PremiumPage() {
     fetchStatus();
   }, []);
 
-  async function handleSubscribe() {
+  async function handleSubscribe(targetTier: "plus" | "plus_plus") {
     setErrorNotice("");
     setPurchasing(true);
     try {
       const res = await api.post<SubscriptionStatus>("/api/subscription/purchase", {
+        tier: targetTier,
         payment_method: selectedMethod,
       });
       setStatus(res);
@@ -76,352 +101,399 @@ export default function PremiumPage() {
     }
   }
 
-  const isPremiumActive = Boolean(status?.is_premium || user?.is_premium);
+  const selectedTierPrice = selectedTier === "plus_plus" ? 65000 : 40000;
 
   return (
     <RequireAuth>
-      <div className="w-full text-slate-100">
-        <main className="py-10 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-5xl mx-auto space-y-12">
-            {/* Hero Header */}
-            <div className="text-center space-y-4">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-100/80 border border-amber-300/80 text-amber-900 text-xs font-bold tracking-wide uppercase shadow-sm">
-                <Crown className="w-4 h-4 text-amber-600 fill-amber-500 animate-pulse" />
-                TalabaGo VIP Imtiyozlari
-              </div>
-
-              <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
-                TalabaGo <span className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 bg-clip-text text-transparent">PREMIUM</span>
-              </h1>
-
-              <p className="max-w-2xl mx-auto text-base sm:text-lg text-slate-600">
-                Testlarda 2.4 barobar ko'proq yulduzcha ishlang, do'stlaringizga yulduz o'tkazing va platformada Python, Django, Algoritmlarni amaliy o'rganing!
-              </p>
+      <div className="w-full text-slate-100 min-h-screen py-10 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto space-y-12">
+          {/* Hero Header */}
+          <div className="text-center space-y-4 max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold tracking-wide uppercase shadow-sm">
+              <Crown className="w-4 h-4 text-amber-400 fill-amber-400 animate-pulse" />
+              {t("prem_badge")}
             </div>
 
-            {/* Success Notice */}
-            {successNotice && (
-              <div className="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-start gap-4 shadow-sm animate-in fade-in">
-                <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <h3 className="font-bold text-base text-emerald-800">
-                    Tabriklaymiz! Sizning Premium obunangiz muvaffaqiyatli faollashtirildi! 🎉
-                  </h3>
-                  <p className="text-sm text-emerald-700">
-                    Barcha imtiyozlar (1.2⭐ yulduzcha tezligi, do'stlarga o'tkazish, dasturlash laboratoriyasi) tayyor.
-                  </p>
-                  <div className="pt-2 flex gap-3">
-                    <Link
-                      href="/learning"
-                      className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 transition-colors shadow"
-                    >
-                      <Code2 className="w-3.5 h-3.5" /> Dasturlashni boshlash
-                    </Link>
-                    <Link
-                      href="/rewards"
-                      className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-white text-emerald-800 border border-emerald-300 text-xs font-semibold rounded-lg hover:bg-emerald-100/50 transition-colors"
-                    >
-                      <Send className="w-3.5 h-3.5" /> Yulduz o'tkazish
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            )}
+            <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
+              {t("prem_hero_title")} <span className="bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 bg-clip-text text-transparent">{t("prem_hero_highlight")}</span>
+            </h1>
 
-            {/* If Already Premium */}
-            {isPremiumActive && !successNotice && (
-              <div className="p-6 rounded-3xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-xl shadow-amber-500/20 flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shadow-inner">
-                    <Crown className="w-9 h-9 text-amber-200 fill-amber-200" />
-                  </div>
-                  <div>
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/25 text-[11px] font-extrabold uppercase tracking-wider mb-1">
-                      <Sparkles className="w-3 h-3" /> Faol Obuna
-                    </div>
-                    <h2 className="text-xl sm:text-2xl font-black">
-                      Siz TalabaGo Premium egasisiz!
-                    </h2>
-                    <p className="text-amber-100 text-xs sm:text-sm">
-                      {status?.premium_expires ? (
-                        <>Muddati: {new Date(status.premium_expires).toLocaleDateString("uz-UZ", { day: "numeric", month: "long", year: "numeric" })} gacha faol</>
-                      ) : (
-                        "Faol Premium obuna"
-                      )}
-                    </p>
-                  </div>
-                </div>
+            <p className="text-base sm:text-lg text-slate-400">
+              {t("prem_hero_sub")}
+            </p>
+          </div>
 
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={handleSubscribe}
-                    disabled={purchasing}
-                    className="px-5 py-2.5 rounded-xl bg-white text-amber-700 hover:bg-amber-50 font-bold text-sm shadow-md transition-all flex items-center gap-2 hover:scale-105 active:scale-95 disabled:opacity-50"
+          {/* Success Notice */}
+          {successNotice && (
+            <div className="p-5 rounded-3xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 flex items-start gap-4 shadow-xl backdrop-blur-md animate-in fade-in">
+              <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <h3 className="font-bold text-base text-white">
+                  {t("prem_congrats_title")}
+                </h3>
+                <p className="text-sm text-emerald-300/90">
+                  {t("prem_congrats_desc")}
+                </p>
+                <div className="pt-2 flex gap-3">
+                  <Link
+                    href="/tests"
+                    className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-emerald-500 text-slate-950 text-xs font-bold rounded-xl hover:bg-emerald-400 transition-colors shadow"
                   >
-                    {purchasing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />}
-                    Yana 1 oyga uzaytirish (15 000 so'm)
-                  </button>
+                    {t("prem_start_tests")}
+                  </Link>
+                  <Link
+                    href="/profile"
+                    className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-white/10 text-white border border-white/20 text-xs font-semibold rounded-xl hover:bg-white/20 transition-colors"
+                  >
+                    {t("prem_view_profile")}
+                  </Link>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Pricing Card & Comparison */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-              {/* Feature comparison table (8 cols) */}
-              <div className="lg:col-span-7 bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm flex flex-col justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-amber-500" />
-                    Oddiy vs Premium Taqqoslash
-                  </h3>
-
-                  <div className="space-y-4">
-                    {/* Row 1: Stars */}
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between gap-4">
-                      <div className="space-y-0.5">
-                        <div className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
-                          <Star className="w-4 h-4 text-amber-500 fill-amber-400" />
-                          Testlarda yulduzcha stavkasi
-                        </div>
-                        <p className="text-xs text-slate-500">Har bir to'g'ri javob uchun taqdim etiladigan yulduz</p>
-                      </div>
-                      <div className="flex items-center gap-4 text-xs shrink-0">
-                        <div className="text-slate-400 font-medium line-through">0.5 ⭐</div>
-                        <div className="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 font-extrabold text-sm border border-amber-300">
-                          1.2 ⭐
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Row 2: Star Transfers */}
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between gap-4">
-                      <div className="space-y-0.5">
-                        <div className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
-                          <Send className="w-4 h-4 text-indigo-500" />
-                          Yulduzlarni do'stlarga o'tkazish
-                        </div>
-                        <p className="text-xs text-slate-500">Student ID orqali kursdoshlarga yulduz yuborish</p>
-                      </div>
-                      <div className="flex items-center gap-4 text-xs shrink-0">
-                        <div className="text-rose-500 font-semibold">Yopiq ✕</div>
-                        <div className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-bold text-xs border border-emerald-300">
-                          Cheksiz ✓
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Row 3: Programming Track */}
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between gap-4">
-                      <div className="space-y-0.5">
-                        <div className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
-                          <Terminal className="w-4 h-4 text-blue-500" />
-                          Python, Django va Algoritmlar
-                        </div>
-                        <p className="text-xs text-slate-500">Amaliy darslar, tushuntirishlar va topshiriqlar</p>
-                      </div>
-                      <div className="flex items-center gap-4 text-xs shrink-0">
-                        <div className="text-slate-400 font-medium">Faqat 1-dars</div>
-                        <div className="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-800 font-bold text-xs border border-indigo-300">
-                          To'liq ochiq ✓
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Row 4: Code Sandbox */}
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between gap-4">
-                      <div className="space-y-0.5">
-                        <div className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
-                          <Code2 className="w-4 h-4 text-emerald-500" />
-                          Sayt ichida kod yozish va tekshirish
-                        </div>
-                        <p className="text-xs text-slate-500">Interaktiv dasturlash laboratoriyasi (Code Runner)</p>
-                      </div>
-                      <div className="flex items-center gap-4 text-xs shrink-0">
-                        <div className="text-rose-500 font-semibold">Yopiq ✕</div>
-                        <div className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-bold text-xs border border-emerald-300">
-                          To'liq ochiq ✓
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Row 5: VIP Status */}
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between gap-4">
-                      <div className="space-y-0.5">
-                        <div className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
-                          <Crown className="w-4 h-4 text-amber-500 fill-amber-400" />
-                          Oltin VIP Nishon (Reytingda ustunlik)
-                        </div>
-                        <p className="text-xs text-slate-500">Profil va liderlar jadvalida oltin toj nishoni</p>
-                      </div>
-                      <div className="flex items-center gap-4 text-xs shrink-0">
-                        <div className="text-slate-400 font-medium">Yo'q</div>
-                        <div className="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 font-bold text-xs border border-amber-300">
-                          Mavjud 👑
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-6 border-t border-slate-100 mt-6 flex items-center justify-between text-xs text-slate-500">
-                  <span className="flex items-center gap-1">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" /> Xavfsiz to'lov va 100% kafolat
+          {/* Current Active Plan Banner (if user has active status) */}
+          <div className={`p-6 rounded-3xl border transition-all duration-300 flex flex-col md:flex-row items-center justify-between gap-6 ${userTierConfig.cardBg} ${userTierConfig.borderClass}`}>
+            <div className="flex items-center gap-4">
+              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black ${userTierConfig.avatarRing} bg-zinc-900 shadow-xl`}>
+                {userTierConfig.tier === "plus_plus" ? (
+                  <Crown className="w-8 h-8 text-amber-400 fill-amber-400" />
+                ) : userTierConfig.tier === "plus" ? (
+                  <Zap className="w-8 h-8 text-emerald-400 fill-emerald-400" />
+                ) : (
+                  <Shield className="w-8 h-8 text-slate-400" />
+                )}
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold uppercase border ${userTierConfig.badgeClass}`}>
+                    {t("prem_current_plan")}: {userTierConfig.name}
                   </span>
-                  <span>Bir martalik to'lov • Avtomatik yechilmaydi</span>
+                  <span className="text-xs text-slate-400">
+                    • {userTierConfig.starRate}⭐ {t("prem_star_rate_label")}
+                  </span>
                 </div>
+                <h2 className="text-xl sm:text-2xl font-black text-white">
+                  {userTierConfig.tier === "plus_plus"
+                    ? t("prem_plan_plus_plus")
+                    : userTierConfig.tier === "plus"
+                    ? t("prem_plan_plus")
+                    : t("prem_plan_free")}
+                </h2>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {t("prem_tests_used")}: <strong className={userTierConfig.textClass}>{user?.tests_taken || 0}</strong> {userTierConfig.testLimit !== null ? `/ ${userTierConfig.testLimit}` : `(${t("prem_unlimited")})`}
+                </p>
               </div>
+            </div>
 
-              {/* Purchase Card (5 cols) */}
-              <div className="lg:col-span-5 bg-gradient-to-b from-slate-900 via-slate-900 to-indigo-950 rounded-3xl p-7 sm:p-8 text-white shadow-2xl relative overflow-hidden flex flex-col justify-between border border-slate-800">
-                {/* Glow effect */}
-                <div className="absolute top-0 right-0 -mr-16 -mt-16 w-56 h-56 bg-amber-500/20 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-56 h-56 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
+            {userTierConfig.tier !== "plus_plus" && (
+              <button
+                onClick={() => setSelectedTier("plus_plus")}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-amber-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 shrink-0 cursor-pointer"
+              >
+                <Crown className="w-4 h-4 fill-slate-950" />
+                {t("prem_upgrade_btn")}
+              </button>
+            )}
+          </div>
 
-                <div className="relative z-10 space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold uppercase tracking-wider">
-                      <Crown className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                      1 oylik obuna
-                    </div>
-                    <span className="text-xs text-slate-400">Atigi</span>
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-4xl sm:text-5xl font-black tracking-tight text-white">
-                        15,000
-                      </span>
-                      <span className="text-lg text-amber-400 font-bold">so'm</span>
-                      <span className="text-xs text-slate-400">/ oyiga</span>
-                    </div>
-                    <p className="text-xs text-slate-400">
-                      Barcha imtiyozlar 30 kunga to'liq beriladi.
-                    </p>
-                  </div>
-
-                  {/* Payment Methods */}
-                  <div className="space-y-2.5 pt-2">
-                    <label className="text-xs font-semibold text-slate-300 block">
-                      To'lov tizimini tanlang:
-                    </label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        { id: "click", name: "Click", color: "from-blue-600 to-cyan-600" },
-                        { id: "payme", name: "Payme", color: "from-teal-600 to-emerald-600" },
-                        { id: "uzum", name: "Uzum", color: "from-purple-600 to-pink-600" },
-                      ].map((m) => (
-                        <button
-                          key={m.id}
-                          type="button"
-                          onClick={() => setSelectedMethod(m.id as any)}
-                          className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all flex flex-col items-center justify-center gap-1 ${
-                            selectedMethod === m.id
-                              ? "bg-white/15 border-amber-400 text-white shadow-lg shadow-amber-500/10 scale-102"
-                              : "bg-white/5 border-slate-700 text-slate-400 hover:bg-white/10"
-                          }`}
-                        >
-                          <span>{m.name}</span>
-                          {selectedMethod === m.id && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Feature summary bullets */}
-                  <div className="space-y-2.5 text-xs text-slate-300 pt-2">
-                    <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span>Har to'g'ri javobga <strong>1.2 ⭐ yulduz</strong></span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span>Do'stlarga yulduzcha o'tkazish imkoniyati</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span>Python, Django, Algoritmlar amaliyoti</span>
-                    </div>
-                  </div>
-
-                  {errorNotice && (
-                    <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs">
-                      {errorNotice}
-                    </div>
+          {/* 3 Pricing Cards Side-by-Side */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch">
+            {/* 1. Oddiy (Free) Plan */}
+            <div className={`rounded-3xl border p-7 flex flex-col justify-between transition-all duration-300 relative ${
+              currentTier === "free"
+                ? "bg-slate-900/90 border-slate-600 shadow-xl shadow-slate-950/60 ring-2 ring-slate-500/30"
+                : "bg-slate-900/50 border-white/5 hover:border-white/15"
+            }`}>
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                    {t("prem_free_badge")}
+                  </span>
+                  {currentTier === "free" && (
+                    <span className="text-[11px] font-extrabold text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded-md">
+                      {t("prem_free_active")}
+                    </span>
                   )}
                 </div>
 
-                <div className="relative z-10 pt-6 space-y-3">
-                  <button
-                    onClick={handleSubscribe}
-                    disabled={purchasing}
-                    className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-sm sm:text-base shadow-xl shadow-amber-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    {purchasing ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        To'lov bajarilmoqda...
-                      </>
-                    ) : (
-                      <>
-                        <Crown className="w-5 h-5 fill-slate-950" />
-                        {isPremiumActive ? "Obunani uzaytirish (15 000 so'm)" : "15 000 so'mga Premium olish"}
-                      </>
-                    )}
-                  </button>
-
-                  <p className="text-[11px] text-center text-slate-400">
-                    To'lov bir zumda hisobingizga biriktiriladi.
-                  </p>
+                <div className="space-y-1">
+                  <h3 className="text-2xl font-black text-white">{t("prem_free_title")}</h3>
+                  <p className="text-xs text-slate-400">{t("prem_free_sub")}</p>
                 </div>
+
+                <div className="flex items-baseline gap-1.5 pb-4 border-b border-white/5">
+                  <span className="text-4xl font-black text-white">0</span>
+                  <span className="text-sm font-bold text-slate-400">so&apos;m</span>
+                  <span className="text-xs text-slate-500">/ {t("prem_free_price")}</span>
+                </div>
+
+                {/* Key specs */}
+                <div className="space-y-3 text-xs text-slate-300">
+                  <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.03]">
+                    <Star className="w-4 h-4 text-amber-400 fill-amber-400 shrink-0" />
+                    <div>
+                      <span className="font-bold text-white block">{t("prem_free_star_title")}</span>
+                      <span className="text-[11px] text-slate-400">{t("prem_free_star_sub")}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.03]">
+                    <Layers className="w-4 h-4 text-blue-400 shrink-0" />
+                    <div>
+                      <span className="font-bold text-white block">{t("prem_free_test_title")}</span>
+                      <span className="text-[11px] text-slate-400">{t("prem_free_test_sub")}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.03]">
+                    <Shield className="w-4 h-4 text-slate-400 shrink-0" />
+                    <div>
+                      <span className="font-bold text-white block">{t("prem_free_profile_title")}</span>
+                      <span className="text-[11px] text-slate-400">{t("prem_free_profile_sub")}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6 mt-6 border-t border-white/5">
+                <button
+                  disabled
+                  className="w-full py-3 rounded-2xl bg-white/5 text-slate-400 text-xs font-bold cursor-not-allowed border border-white/5"
+                >
+                  {currentTier === "free" ? t("prem_free_btn_current") : t("prem_free_btn_default")}
+                </button>
               </div>
             </div>
 
-            {/* Quick action banners */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Link
-                href="/learning"
-                className="group p-6 rounded-3xl bg-white border border-slate-200/80 hover:border-indigo-400 hover:shadow-lg transition-all flex items-center justify-between gap-4"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
-                    <Code2 className="w-7 h-7" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-900 text-base group-hover:text-indigo-600 transition-colors">
-                      Dasturlash Laboratoriyasiga o'tish
-                    </h4>
-                    <p className="text-xs text-slate-500">
-                      Python, Django va Algoritmlarni sayt ichida amalda bajaring
-                    </p>
-                  </div>
-                </div>
-                <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all shrink-0" />
-              </Link>
+            {/* 2. TalabaGo Plus (40 000 so'm) */}
+            <div className={`rounded-3xl border p-7 flex flex-col justify-between transition-all duration-300 relative ${
+              selectedTier === "plus"
+                ? "bg-gradient-to-b from-emerald-950/60 via-slate-900 to-slate-950 border-emerald-500/60 shadow-2xl shadow-emerald-950/60 ring-2 ring-emerald-500/50 scale-[1.02]"
+                : "bg-slate-900/60 border-emerald-500/20 hover:border-emerald-500/40"
+            }`}>
+              {/* Top tag */}
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span className="text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/30">
+                  {t("prem_plus_popular")}
+                </span>
+              </div>
 
-              <Link
-                href="/rewards"
-                className="group p-6 rounded-3xl bg-white border border-slate-200/80 hover:border-amber-400 hover:shadow-lg transition-all flex items-center justify-between gap-4"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform">
-                    <Send className="w-7 h-7" />
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    TalabaGo Plus
+                  </span>
+                  {currentTier === "plus" && (
+                    <span className="text-[11px] font-extrabold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                      {t("prem_plus_active")}
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <h3 className="text-2xl font-black text-white">TalabaGo Plus</h3>
+                  <p className="text-xs text-slate-400">{t("prem_plus_sub")}</p>
+                </div>
+
+                <div className="flex items-baseline gap-1.5 pb-4 border-b border-white/5">
+                  <span className="text-4xl sm:text-5xl font-black text-white">40,000</span>
+                  <span className="text-sm font-bold text-emerald-400">so&apos;m</span>
+                  <span className="text-xs text-slate-400">{t("prem_plus_per_month")}</span>
+                </div>
+
+                {/* Key specs */}
+                <div className="space-y-3 text-xs text-slate-300">
+                  <div className="flex items-center gap-2.5 p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                    <Star className="w-4 h-4 text-emerald-400 fill-emerald-400 shrink-0" />
+                    <div>
+                      <span className="font-bold text-emerald-300 block">{t("prem_plus_star_title")}</span>
+                      <span className="text-[11px] text-slate-400">{t("prem_plus_star_sub")}</span>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-slate-900 text-base group-hover:text-amber-600 transition-colors">
-                      Yulduzchalarni do'stlarga o'tkazish
-                    </h4>
-                    <p className="text-xs text-slate-500">
-                      Student ID raqami bo'yicha tezkor yulduz o'tkazmalari
-                    </p>
+
+                  <div className="flex items-center gap-2.5 p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                    <Zap className="w-4 h-4 text-emerald-400 fill-emerald-400 shrink-0" />
+                    <div>
+                      <span className="font-bold text-emerald-300 block">{t("prem_plus_test_title")}</span>
+                      <span className="text-[11px] text-slate-400">{t("prem_plus_test_sub")}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                    <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <div>
+                      <span className="font-bold text-emerald-300 block">{t("prem_plus_profile_title")}</span>
+                      <span className="text-[11px] text-slate-400">{t("prem_plus_profile_sub")}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-[11px] text-slate-300 pt-1">
+                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>{t("prem_plus_feat_stars")}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px] text-slate-300">
+                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>{t("prem_plus_feat_coding")}</span>
                   </div>
                 </div>
-                <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-amber-600 group-hover:translate-x-1 transition-all shrink-0" />
-              </Link>
+              </div>
+
+              <div className="pt-6 mt-6 border-t border-white/5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedTier("plus");
+                    handleSubscribe("plus");
+                  }}
+                  disabled={purchasing || currentTier === "plus"}
+                  className="w-full py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-emerald-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {purchasing && selectedTier === "plus" ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Zap className="w-4 h-4 fill-slate-950" />
+                  )}
+                  {currentTier === "plus" ? t("prem_plus_btn_current") : t("prem_plus_btn_buy")}
+                </button>
+              </div>
+            </div>
+
+            {/* 3. TalabaGo Plus+ (65 000 so'm) */}
+            <div className={`rounded-3xl border p-7 flex flex-col justify-between transition-all duration-300 relative ${
+              selectedTier === "plus_plus"
+                ? "bg-gradient-to-b from-amber-950/60 via-purple-950/40 to-slate-950 border-amber-400/80 shadow-2xl shadow-amber-950/70 ring-2 ring-amber-400/60 scale-[1.02]"
+                : "bg-slate-900/60 border-amber-500/30 hover:border-amber-400/50"
+            }`}>
+              {/* Crown Tag */}
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span className="text-[10px] font-black uppercase tracking-wider px-3.5 py-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-400 text-slate-950 shadow-md shadow-amber-500/30 flex items-center gap-1">
+                  <Crown className="w-3 h-3 fill-slate-950" />
+                  {t("prem_plusplus_vip")}
+                </span>
+              </div>
+
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-purple-500/20 text-amber-300 border border-amber-400/40">
+                    TalabaGo Plus+
+                  </span>
+                  {currentTier === "plus_plus" && (
+                    <span className="text-[11px] font-extrabold text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-400/40">
+                      {t("prem_plusplus_active")}
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <h3 className="text-2xl font-black text-white flex items-center gap-2">
+                    <span>TalabaGo Plus+</span>
+                    <Crown className="w-5 h-5 text-amber-400 fill-amber-400" />
+                  </h3>
+                  <p className="text-xs text-slate-400">{t("prem_plusplus_sub")}</p>
+                </div>
+
+                <div className="flex items-baseline gap-1.5 pb-4 border-b border-white/5">
+                  <span className="text-4xl sm:text-5xl font-black text-white">65,000</span>
+                  <span className="text-sm font-bold text-amber-400">so&apos;m</span>
+                  <span className="text-xs text-slate-400">{t("prem_plus_per_month")}</span>
+                </div>
+
+                {/* Key specs */}
+                <div className="space-y-3 text-xs text-slate-300">
+                  <div className="flex items-center gap-2.5 p-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                    <Star className="w-4 h-4 text-amber-400 fill-amber-400 shrink-0" />
+                    <div>
+                      <span className="font-bold text-amber-300 block">{t("prem_plusplus_star_title")}</span>
+                      <span className="text-[11px] text-slate-400">{t("prem_plusplus_star_sub")}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 p-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                    <Crown className="w-4 h-4 text-amber-400 fill-amber-400 shrink-0" />
+                    <div>
+                      <span className="font-bold text-amber-300 block">{t("prem_plusplus_test_title")}</span>
+                      <span className="text-[11px] text-slate-400">{t("prem_plusplus_test_sub")}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 p-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                    <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+                    <div>
+                      <span className="font-bold text-amber-300 block">{t("prem_plusplus_profile_title")}</span>
+                      <span className="text-[11px] text-slate-400">{t("prem_plusplus_profile_sub")}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-[11px] text-slate-300 pt-1">
+                    <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span>{t("prem_plusplus_feat_stars")}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px] text-slate-300">
+                    <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span>{t("prem_plusplus_feat_coding")}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6 mt-6 border-t border-white/5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedTier("plus_plus");
+                    handleSubscribe("plus_plus");
+                  }}
+                  disabled={purchasing || currentTier === "plus_plus"}
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-400 hover:from-amber-400 hover:to-orange-300 text-slate-950 font-black text-xs sm:text-sm shadow-xl shadow-amber-500/30 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {purchasing && selectedTier === "plus_plus" ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Crown className="w-4 h-4 fill-slate-950" />
+                  )}
+                  {currentTier === "plus_plus" ? t("prem_plusplus_btn_current") : t("prem_plusplus_btn_buy")}
+                </button>
+              </div>
             </div>
           </div>
-        </main>
+
+          {/* Payment Method Selector & Guarantee */}
+          <div className="bg-slate-900/60 border border-white/10 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="space-y-2">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                {t("prem_pay_method")}
+              </span>
+              <div className="flex items-center gap-3">
+                {[
+                  { id: "click", name: "Click Up" },
+                  { id: "payme", name: "Payme" },
+                  { id: "uzum", name: "Uzum Bank" },
+                ].map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setSelectedMethod(m.id as any)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                      selectedMethod === m.id
+                        ? "bg-white text-slate-950 border-white shadow-md"
+                        : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-white"
+                    }`}
+                  >
+                    {m.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 text-xs text-slate-400">
+              <ShieldCheck className="w-6 h-6 text-emerald-400 shrink-0" />
+              <div>
+                <p className="font-bold text-white">{t("prem_secure_title")}</p>
+                <p className="text-[11px]">{t("prem_secure_sub")}</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </RequireAuth>
   );

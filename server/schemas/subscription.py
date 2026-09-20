@@ -1,25 +1,33 @@
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Optional, List
 
 
 class SubscriptionPlanOut(BaseModel):
-    name: str = "StudentHub Premium"
-    price_uzs: int = 15000
-    duration_days: int = 30
-    features: list[str] = [
-        "Har bir to'g'ri javob uchun 1.2 yulduzcha (oddiy: 0.5)",
-        "Yulduzchalarni do'stlarga student_id orqali o'tkazish",
-        "Python, Django va Algoritmlar interaktiv amaliy darslari",
-        "Sayt ichida kod yozish va real-vaqtda bajarish (Code Sandbox)",
-        "VIP Premium nishoni va reytingda ustunlik",
-    ]
+    tier: str
+    name: str
+    badge: str
+    price_uzs: int
+    star_rate: float
+    test_limit: Optional[int] = None
+    duration_days: int
+    color: str
+    hex: str
+    features: List[str]
 
 
 class SubscriptionStatusOut(BaseModel):
     is_premium: bool
-    premium_expires: datetime | None = None
-    plan: SubscriptionPlanOut = SubscriptionPlanOut()
+    subscription_tier: str  # "free" | "plus" | "plus_plus"
+    tier_name: str
+    star_rate: float
+    tests_taken: int
+    test_limit: Optional[int] = None
+    premium_expires: Optional[datetime] = None
+    plans: List[SubscriptionPlanOut]
+    current_plan: SubscriptionPlanOut
 
 
 class SubscriptionPurchaseRequest(BaseModel):
+    tier: str = "plus"  # "plus" | "plus_plus"
     payment_method: str = "click"  # "click", "payme", "uzum", "balance"

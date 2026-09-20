@@ -21,6 +21,7 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
   Crown,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -363,7 +364,7 @@ export default function RewardsPage() {
                       }`}
                     >
                       <ArrowRightLeft className="w-4 h-4" />
-                      Yulduz o'tkazish
+                      {t("rewards_transfer_tab")}
                     </button>
                     <button
                       onClick={() => setActionTab("withdraw")}
@@ -374,7 +375,7 @@ export default function RewardsPage() {
                       }`}
                     >
                       <Wallet className="w-4 h-4" />
-                      Pul yechish
+                      {t("rewards_withdraw_tab")}
                     </button>
                   </div>
                 </div>
@@ -516,33 +517,33 @@ export default function RewardsPage() {
                     <div>
                       <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                         <ArrowRightLeft className="w-5 h-5 text-emerald-600" />
-                        Boshqa talabaga yulduz o'tkazish
+                        {t("rewards_transfer_title")}
                       </h2>
                       <p className="text-slate-500 text-xs sm:text-sm mt-1">
-                        Do'stingizning Student ID raqamini (masalan, <span className="font-mono font-bold text-slate-700">T000002</span>) kiriting va yulduzlarni bir zumda o'tkazing.
+                        {t("rewards_transfer_sub")}
                       </p>
                     </div>
 
                     {!user?.is_premium && !user?.is_admin && (
-                      <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+                      <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-amber-200/80 flex items-center justify-center text-amber-800 shrink-0">
-                            <Crown className="w-5 h-5 fill-amber-600 text-amber-700" />
+                          <div className="w-9 h-9 rounded-xl bg-emerald-200/80 flex items-center justify-center text-emerald-800 shrink-0">
+                            <Zap className="w-5 h-5 fill-emerald-600 text-emerald-700" />
                           </div>
                           <div>
-                            <p className="text-xs sm:text-sm font-bold text-amber-900">
-                              Yulduzchalarni o'tkazish faqat Premium foydalanuvchilar uchun!
+                            <p className="text-xs sm:text-sm font-bold text-emerald-950">
+                              {t("rewards_prem_banner_title")}
                             </p>
-                            <p className="text-[11px] text-amber-700">
-                              Premium obunani atigi 15 000 so'mga oling va do'stlaringizga yulduz o'tkazing.
+                            <p className="text-[11px] text-emerald-800">
+                              {t("rewards_prem_banner_desc")}
                             </p>
                           </div>
                         </div>
                         <Link
                           href="/premium"
-                          className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs shadow-sm transition-all shrink-0"
+                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-sm transition-all shrink-0"
                         >
-                          Premium olish (15 000 so'm)
+                          {t("rewards_get_plus_btn")}
                         </Link>
                       </div>
                     )}

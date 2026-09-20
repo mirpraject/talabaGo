@@ -12,7 +12,13 @@ from ..schemas import (
     TestSubmit,
 )
 from .auth import get_current_user
-from ..premium_utils import is_user_premium, REGULAR_STAR_PER_ANSWER, PREMIUM_STAR_PER_ANSWER
+from ..premium_utils import (
+    is_user_premium,
+    get_user_tier,
+    get_user_star_rate,
+    get_user_test_limit,
+    SUBSCRIPTION_PLANS,
+)
 
 router = APIRouter(prefix="/api/tests", tags=["tests"])
 
@@ -137,6 +143,17 @@ def submit_test(
     if not test:
         raise HTTPException(status_code=404, detail="Test topilmadi")
 
+    tier = get_user_tier(current_user)
+    test_limit = get_user_test_limit(current_user)
+    current_taken = getattr(current_user, "tests_taken", 0) or 0
+
+    if test_limit is not None and current_taken >= test_limit:
+        plan_name = SUBSCRIPTION_PLANS[tier]["name"]
+        raise HTTPException(
+            status_code=403,
+            detail=f"Sizning {plan_name} obunangiz bo'yicha {test_limit} ta test yechish limiti to'lgan! Keyingi testlarni yechish uchun TalabaGo Plus yoki Plus+ ga o'ting."
+        )
+
     all_questions = (
         db.query(TestQuestion)
         .filter(TestQuestion.test_id == test_id)
@@ -174,11 +191,11 @@ def submit_test(
     total = len(questions) or 1
     percentage = round((score / total) * 100, 1)
 
-    is_premium = is_user_premium(current_user)
-    star_rate = PREMIUM_STAR_PER_ANSWER if is_premium else REGULAR_STAR_PER_ANSWER
+    star_rate = get_user_star_rate(current_user)
     stars_earned = round(score * star_rate, 2)
 
     current_user.stars = round(float(current_user.stars or 0.0) + stars_earned, 2)
+    current_user.tests_taken = current_taken + 1
     db.commit()
 
     return TestResultOut(
@@ -186,6 +203,10 @@ def submit_test(
         total=len(questions),
         percentage=percentage,
         stars_earned=stars_earned,
+        star_rate=star_rate,
+        tests_taken=current_user.tests_taken,
+        test_limit=test_limit,
+        subscription_tier=tier,
         ticket_number=ticket_num,
         total_tickets=total_tickets,
         results=results,

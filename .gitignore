@@ -38,10 +38,10 @@ develop-eggs/
 dist/
 downloads/
 eggs/
-lib/
-!frontend/src/lib/
-!frontend/src/lib/**
-lib64/
+/lib/
+/lib64/
+!src/lib/
+!src/lib/**
 parts/
 sdist/
 var/
@@ -53,6 +53,9 @@ wheels/
 venv/
 ENV/
 env/
+# Temporary conversion scripts
+add_kr*.py
+scratch_*.py
 
 # Node & Next.js
 node_modules/

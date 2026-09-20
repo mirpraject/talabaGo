@@ -180,7 +180,7 @@ def transfer_stars(
     if not is_user_premium(current_user) and not current_user.is_admin:
         raise HTTPException(
             status_code=403,
-            detail="Yulduzchalarni do'stlarga o'tkazish faqat Premium foydalanuvchilar uchun ruxsat etilgan! Premium obunani atigi 15 000 so'mga faollashtiring.",
+            detail="Yulduzchalarni do'stlarga o'tkazish faqat TalabaGo Plus va Plus+ obunachilari uchun ruxsat etilgan! Obunani faollashtiring (TalabaGo Plus: 40 000 so'm yoki Plus+: 65 000 so'm).",
         )
 
     if data.stars <= 0:

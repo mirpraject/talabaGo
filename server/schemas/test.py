@@ -57,6 +57,10 @@ class TestResultOut(BaseModel):
     total: int
     percentage: float
     stars_earned: float = 0.0
+    star_rate: float = 0.5
+    tests_taken: int = 0
+    test_limit: int | None = None
+    subscription_tier: str = "free"
     ticket_number: int | None = 1
     total_tickets: int | None = 1
     results: list[dict]

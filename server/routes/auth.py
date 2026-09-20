@@ -8,6 +8,7 @@ from ..database import get_db
 from ..models import User
 from ..schemas import UserCreate, UserOut, UserUpdate, Token, LoginRequest
 from ..security import hash_password, verify_password, create_access_token
+from ..premium_utils import get_user_tier
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -142,11 +143,21 @@ def login_json(data: LoginRequest, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=UserOut)
 def get_me(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    if not current_user.student_id or not current_user.avatar_url:
-        if not current_user.student_id:
-            current_user.student_id = f"T{current_user.id:06d}"
-        if not current_user.avatar_url:
-            current_user.avatar_url = f"https://api.dicebear.com/7.x/bottts/svg?seed={current_user.student_id}"
+    changed = False
+    if not current_user.student_id:
+        current_user.student_id = f"T{current_user.id:06d}"
+        changed = True
+    if not current_user.avatar_url:
+        current_user.avatar_url = f"https://api.dicebear.com/7.x/bottts/svg?seed={current_user.student_id}"
+        changed = True
+    
+    current_tier = get_user_tier(current_user)
+    if current_user.subscription_tier != current_tier:
+        current_user.subscription_tier = current_tier
+        current_user.is_premium = current_tier in ("plus", "plus_plus")
+        changed = True
+        
+    if changed:
         db.commit()
         db.refresh(current_user)
     return current_user

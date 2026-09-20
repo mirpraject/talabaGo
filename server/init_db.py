@@ -31,6 +31,8 @@ def init_db() -> None:
     _add_column("users", "grade", "grade INTEGER")
     _add_column("users", "is_blocked", "is_blocked BOOLEAN DEFAULT FALSE")
     _add_column("users", "block_reason", "block_reason VARCHAR")
+    _add_column("users", "subscription_tier", "subscription_tier VARCHAR DEFAULT 'free'")
+    _add_column("users", "tests_taken", "tests_taken INTEGER NOT NULL DEFAULT 0")
     _add_column("tests", "level", "level VARCHAR")
     _add_column("tests", "grade", "grade INTEGER")
     print("Schema muvaffaqiyatli tayyorlandi / yangilandi")

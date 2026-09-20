@@ -25,6 +25,8 @@ class User(Base):
     bio = Column(Text, nullable=True)
     stars = Column(Float, default=0.0, nullable=False)
     is_premium = Column(Boolean, default=False)
+    subscription_tier = Column(String, default="free", nullable=False)  # "free" | "plus" | "plus_plus"
+    tests_taken = Column(Integer, default=0, nullable=False)
     premium_expires = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), default=func.now()

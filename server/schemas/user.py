@@ -16,9 +16,16 @@ class UserBase(BaseModel):
 
 
 def validate_password(v: str) -> str:
-    if len(v) < 6:
-        raise ValueError("Parol kamida 6 ta belgidan iborat bo'lishi kerak")
+    if len(v) < 8:
+        raise ValueError("Parol kamida 8 ta belgidan iborat bo'lishi kerak")
+    if not re.search(r"[A-Z]", v):
+        raise ValueError("Parolda kamida bitta katta harf (A-Z) bo'lishi kerak")
+    if not re.search(r"[a-z]", v):
+        raise ValueError("Parolda kamida bitta kichik harf (a-z) bo'lishi kerak")
+    if not re.search(r"\d", v):
+        raise ValueError("Parolda kamida bitta raqam (0-9) bo'lishi kerak")
     return v
+
 
 
 class UserCreate(BaseModel):
@@ -71,6 +78,8 @@ class UserOut(UserBase):
     bio: str | None = None
     stars: float = 0.0
     is_premium: bool = False
+    subscription_tier: str = "free"
+    tests_taken: int = 0
     premium_expires: datetime | None = None
     created_at: datetime | None = None
 

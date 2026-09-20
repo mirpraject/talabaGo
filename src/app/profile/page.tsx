@@ -17,7 +17,12 @@ import {
   Sparkles,
   Shield,
   Star,
+  Crown,
+  Zap,
+  ArrowRight,
 } from "lucide-react";
+import Link from "next/link";
+import { getTierConfig } from "@/lib/subscription";
 
 type University = {
   id: number;
@@ -39,6 +44,11 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+
+  const tierConfig = getTierConfig(user);
+  const testsTaken = user?.tests_taken || 0;
+  const testLimit = tierConfig.testLimit;
+  const testPercent = testLimit ? Math.min(100, Math.round((testsTaken / testLimit) * 100)) : 100;
 
   useEffect(() => {
     api
@@ -91,27 +101,118 @@ export default function ProfilePage() {
 
   return (
     <RequireAuth>
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Profile Card Header */}
-        <div className="glass-card border border-white/10 overflow-hidden mb-6">
-          <div className="h-28 bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-800 relative">
-            <div className="absolute top-3 right-4 flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-black/40 text-zinc-200 border border-white/10 backdrop-blur-md flex items-center gap-1.5">
-                <Shield className="w-3.5 h-3.5 text-violet-400" />
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* Profile Card Header (Dynamic Theme by Subscription Tier) */}
+        <div className={`glass-card overflow-hidden border transition-all duration-500 ${tierConfig.borderClass}`}>
+          {/* Header Banner */}
+          <div className={`h-32 bg-gradient-to-r ${tierConfig.bannerGradient} relative p-4 flex items-start justify-between shadow-inner`}>
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-black/40 text-white border border-white/20 backdrop-blur-md flex items-center gap-1.5 shadow-sm">
+                <Shield className="w-3.5 h-3.5 text-white" />
                 {user?.is_admin ? "Administrator" : "Talaba"}
               </span>
             </div>
+
+            {/* Tier Badge */}
+            <div className="flex items-center gap-2">
+              <span className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider backdrop-blur-md flex items-center gap-1.5 shadow-md ${tierConfig.badgeClass}`}>
+                {tierConfig.tier === "plus_plus" ? (
+                  <Crown className="w-4 h-4 text-amber-300 fill-amber-300 animate-bounce" />
+                ) : tierConfig.tier === "plus" ? (
+                  <Zap className="w-3.5 h-3.5 text-emerald-300 fill-emerald-300" />
+                ) : (
+                  <Shield className="w-3.5 h-3.5 text-slate-300" />
+                )}
+                <span>{tierConfig.name}</span>
+              </span>
+            </div>
           </div>
-          <div className="px-6 pb-6 -mt-10 flex items-end gap-4">
-            <div className="w-20 h-20 bg-zinc-900 rounded-2xl border-2 border-white/20 flex items-center justify-center shadow-xl text-2xl font-black text-violet-400">
-              {(user?.full_name || user?.username || "?").charAt(0).toUpperCase()}
+
+          {/* Profile Info */}
+          <div className="px-6 pb-6 -mt-12 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div className="flex items-end gap-4">
+              <div className={`w-24 h-24 rounded-2xl flex items-center justify-center text-3xl font-black transition-all duration-300 ${tierConfig.avatarRing} bg-zinc-900 shadow-2xl`}>
+                <span className={tierConfig.textClass}>
+                  {(user?.full_name || user?.username || "?").charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div className="pt-2">
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                    {user?.full_name || user?.username}
+                  </h1>
+                </div>
+                <p className="text-xs text-zinc-400">@{user?.username}</p>
+                {user?.student_id && (
+                  <span className="inline-block mt-1 text-[11px] font-mono font-bold text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded border border-violet-500/20">
+                    ID: {user.student_id}
+                  </span>
+                )}
+              </div>
             </div>
-            <div className="pt-2">
-              <h1 className="text-xl font-bold text-white">
-                {user?.full_name || user?.username}
-              </h1>
-              <p className="text-xs text-zinc-400">@{user?.username}</p>
+
+            <Link
+              href="/premium"
+              className="btn btn-sm btn-secondary text-xs self-start sm:self-auto gap-1.5 font-bold"
+            >
+              <span>Obunani boshqarish</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Subscription & Imtiyozlar Card */}
+        <div className={`p-6 rounded-3xl border transition-all duration-300 ${tierConfig.cardBg} ${tierConfig.borderClass}`}>
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className={`p-2 rounded-xl bg-white/10 ${tierConfig.textClass}`}>
+                {tierConfig.tier === "plus_plus" ? (
+                  <Crown className="w-5 h-5 fill-current" />
+                ) : tierConfig.tier === "plus" ? (
+                  <Zap className="w-5 h-5 fill-current" />
+                ) : (
+                  <Star className="w-5 h-5 fill-current" />
+                )}
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <span>{tierConfig.name}</span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold uppercase border ${tierConfig.badgeClass}`}>
+                    Faol
+                  </span>
+                </h3>
+                <p className="text-xs text-zinc-400">
+                  {tierConfig.priceUzs === 0 ? "Bepul asosiy daraja" : `${tierConfig.priceUzs.toLocaleString()} so'm / oy`}
+                </p>
+              </div>
             </div>
+
+            <div className="text-right">
+              <span className="text-xs text-zinc-400 block">Yulduz stavkasi:</span>
+              <span className={`text-base font-black ${tierConfig.textClass}`}>
+                {tierConfig.starRate} ⭐ / javob
+              </span>
+            </div>
+          </div>
+
+          {/* Test Limit Progress Bar */}
+          <div className="space-y-1.5 pt-2 border-t border-white/5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-zinc-400">Test yechish ko&apos;rsatkichi:</span>
+              <span className={`font-bold ${tierConfig.textClass}`}>
+                {testLimit !== null ? `${testsTaken} / ${testLimit} ta test` : `${testsTaken} ta (Cheksiz)`}
+              </span>
+            </div>
+            {testLimit !== null && (
+              <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    testPercent > 90 ? "bg-rose-500" : tierConfig.tier === "plus" ? "bg-emerald-400" : "bg-blue-500"
+                  }`}
+                  style={{ width: `${testPercent}%` }}
+                />
+              </div>
+            )}
           </div>
         </div>
 

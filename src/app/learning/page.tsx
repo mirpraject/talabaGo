@@ -18,9 +18,11 @@ import {
   Loader2,
   Star,
   Layers,
+  ArrowRight,
+  Award,
+  Copy,
+  Check,
 } from "lucide-react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import RequireAuth from "@/components/RequireAuth";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -77,6 +79,7 @@ export default function LearningPage() {
   const [showHint, setShowHint] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [showPremiumModal, setShowPremiumModal] = useState<boolean>(false);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   const isPremium = Boolean(user?.is_premium || user?.is_admin);
 
@@ -97,8 +100,10 @@ export default function LearningPage() {
       hint: "Yordam / Maslahat",
       placeholder: "# Python kodingizni bu yerga yozing...",
       lockedTitle: "Ushbu dars faqat Premium foydalanuvchilar uchun ochiq",
-      lockedSubtitle: "Barcha Python, Django va Algoritmlar darslarini to'liq ochish uchun 15 000 so'm evaziga VIP Premium obunani faollashtiring.",
-      btnGetPremium: "Premium Olish (15 000 so'm)",
+      lockedSubtitle: "Barcha Python, Django va Algoritmlar darslarini to'liq ochish uchun TalabaGo Plus (40 000 so'm) yoki Plus+ (65 000 so'm) obunasini faollashtiring.",
+      btnGetPremium: "Plus Olish (40 000 so'm)",
+      nextLesson: "Keyingi darsga o'tish",
+      trackCompleted: "Tabriklaymiz! Siz ushbu yo'nalishni to'liq tamomladingiz!",
     },
     kaa: {
       badge: "Interaktiv Programmalaw Laboratoriyası",
@@ -116,8 +121,31 @@ export default function LearningPage() {
       hint: "Kómek / Máslahát",
       placeholder: "# Python koduńızdı bul jerge jazıń...",
       lockedTitle: "Bul sabaq tek Premium paydalanıwshılar ushın ashıq",
-      lockedSubtitle: "Barlıq Python, Django hám Algoritmler sabaqların tolıq ashıw ushın 15 000 somǵa VIP Premium jazılıwdı aktivlestiriń.",
-      btnGetPremium: "Premium Jazılıw (15 000 som)",
+      lockedSubtitle: "Barlıq Python, Django hám Algoritmler sabaqların tolıq ashıw ushın TalabaGo Plus (40 000 som) yamasa Plus+ (65 000 som) jazılıwdı aktivlestiriń.",
+      btnGetPremium: "Plus Jazılıw (40 000 som)",
+      nextLesson: "Keyingi sabaqqa ótiw",
+      trackCompleted: "Qutlıqlaymız! Bul baǵdardı tolıq tamamladıńız!",
+    },
+    kr: {
+      badge: "Интерактив Дастурлаш Лабораторияси",
+      title: "Python, Django & Алгоритмлар",
+      premiumActive: "Премиум Очиқ",
+      demoMode: "Демо Режим",
+      algorithms: "Алгоритмлар",
+      lessons: "Дарслар",
+      lessonSuffix: "та дарс",
+      runCode: "Кодни ишга тушириш",
+      checking: "Текширилмоқда...",
+      resetTitle: "Кодни бошланғич ҳолатга қайтариш",
+      theory: "Назария",
+      exercise: "Амалий Топшириқ",
+      hint: "Ёрдам / Маслаҳат",
+      placeholder: "# Python кодингизни бу ерга ёзинг...",
+      lockedTitle: "Ушбу дарс фақат Премиум фойдаланувчилар учун очиқ",
+      lockedSubtitle: "Барча Python, Django ва Алгоритмлар дарсларини тўлиқ очиш учун TalabaGo Plus (40 000 сўм) ёки Plus+ (65 000 сўм) обунасини фаоллаштиринг.",
+      btnGetPremium: "Plus Олиш (40 000 сўм)",
+      nextLesson: "Кейинги дарсга ўтиш",
+      trackCompleted: "Табриклаймиз! Сиз ушбу йўналишни тўлиқ тамомладингиз!",
     },
     ru: {
       badge: "Интерактивная Лаборатория Программирования",
@@ -135,8 +163,10 @@ export default function LearningPage() {
       hint: "Подсказка",
       placeholder: "# Напишите ваш код на Python здесь...",
       lockedTitle: "Этот урок доступен только для пользователей с Premium",
-      lockedSubtitle: "Для полного доступа ко всем урокам Python, Django и Алгоритмов оформите VIP Премиум всего за 15 000 сум в месяц.",
-      btnGetPremium: "Оформить Премиум (15 000 сум)",
+      lockedSubtitle: "Для полного доступа ко всем урокам Python, Django и Алгоритмов оформите TalabaGo Plus (40 000 сум) или Plus+ (65 000 сум).",
+      btnGetPremium: "Оформить Plus (40 000 сум)",
+      nextLesson: "Перейти к следующему уроку",
+      trackCompleted: "Поздравляем! Вы полностью завершили это направление!",
     },
     en: {
       badge: "Interactive Coding Laboratory",
@@ -154,8 +184,10 @@ export default function LearningPage() {
       hint: "Hint",
       placeholder: "# Write your Python code here...",
       lockedTitle: "This lesson is exclusive to Premium members",
-      lockedSubtitle: "Unlock all lessons in Python, Django and Algorithms by subscribing to VIP Premium for just 15,000 UZS/month.",
-      btnGetPremium: "Get Premium (15,000 UZS)",
+      lockedSubtitle: "Unlock all lessons in Python, Django and Algorithms with TalabaGo Plus (40,000 UZS) or Plus+ (65,000 UZS).",
+      btnGetPremium: "Get Plus (40,000 UZS)",
+      nextLesson: "Next Lesson",
+      trackCompleted: "Congratulations! You have completed this track!",
     },
   }[lang] || {
     badge: "Interaktiv Dasturlash Laboratoriyasi",
@@ -173,8 +205,10 @@ export default function LearningPage() {
     hint: "Yordam / Maslahat",
     placeholder: "# Python kodingizni bu yerga yozing...",
     lockedTitle: "Ushbu dars faqat Premium foydalanuvchilar uchun ochiq",
-    lockedSubtitle: "Barcha Python, Django va Algoritmlar darslarini to'liq ochish uchun 15 000 so'm evaziga VIP Premium obunani faollashtiring.",
-    btnGetPremium: "Premium Olish (15 000 so'm)",
+    lockedSubtitle: "Barcha Python, Django va Algoritmlar darslarini to'liq ochish uchun TalabaGo Plus (40 000 so'm) yoki Plus+ (65 000 so'm) obunasini faollashtiring.",
+    btnGetPremium: "Plus Olish (40 000 so'm)",
+    nextLesson: "Keyingi darsga o'tish",
+    trackCompleted: "Tabriklaymiz! Siz ushbu yo'nalishni to'liq tamomladingiz!",
   };
 
   useEffect(() => {
@@ -216,6 +250,16 @@ export default function LearningPage() {
       setCode(lesson.exercises[0].initial_code);
     } else {
       setCode("# Ushbu dars uchun Python kodini sinab ko'ring:\nprint('Salom TalabaGo!')\n");
+    }
+  }
+
+  function handleNextLesson() {
+    if (!currentTrack || !selectedLesson) return;
+    const currentIndex = currentTrack.lessons.findIndex((l) => l.id === selectedLesson.id);
+    if (currentIndex !== -1 && currentIndex + 1 < currentTrack.lessons.length) {
+      const nextLesson = currentTrack.lessons[currentIndex + 1];
+      const isLocked = !isPremium && nextLesson.id !== "py-1";
+      handleSelectLesson(nextLesson, isLocked);
     }
   }
 
@@ -263,7 +307,109 @@ export default function LearningPage() {
     }
   }
 
+  function handleCopySnippet(snippetText: string, idx: number) {
+    navigator.clipboard.writeText(snippetText);
+    setCopiedIndex(idx);
+    setTimeout(() => setCopiedIndex(null), 2000);
+  }
+
   const currentExercise = selectedLesson?.exercises[0];
+  const currentLessonIndex = currentTrack && selectedLesson
+    ? currentTrack.lessons.findIndex((l) => l.id === selectedLesson.id)
+    : -1;
+  const hasNextLesson = currentTrack && currentLessonIndex !== -1 && currentLessonIndex < currentTrack.lessons.length - 1;
+
+  // Custom Markdown & Code renderer for rich theory presentation
+  function renderContentBlocks(rawContent: string) {
+    if (!rawContent) return null;
+
+    const sections = rawContent.split(/```/g);
+    return sections.map((section, idx) => {
+      // Odd indices are code blocks
+      if (idx % 2 === 1) {
+        let codeBody = section;
+        if (section.startsWith("python\n")) {
+          codeBody = section.replace(/^python\n/, "");
+        } else if (section.startsWith("python\r\n")) {
+          codeBody = section.replace(/^python\r\n/, "");
+        }
+
+        return (
+          <div key={idx} className="my-3 rounded-2xl overflow-hidden border border-slate-700/80 bg-slate-950 shadow-inner">
+            <div className="flex items-center justify-between px-3 py-1.5 bg-slate-900 border-b border-slate-800 text-[11px] text-slate-400 font-mono">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
+                python
+              </span>
+              <button
+                onClick={() => handleCopySnippet(codeBody.trim(), idx)}
+                className="hover:text-white transition-colors flex items-center gap-1"
+                title="Kodni nusxalash"
+              >
+                {copiedIndex === idx ? (
+                  <>
+                    <Check className="w-3 h-3 text-emerald-400" />
+                    <span className="text-[10px] text-emerald-400">Nusxalandi</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3 h-3" />
+                    <span className="text-[10px]">Nusxa</span>
+                  </>
+                )}
+              </button>
+            </div>
+            <pre className="p-3 text-[11px] sm:text-xs font-mono text-emerald-300 overflow-x-auto whitespace-pre leading-relaxed">
+              {codeBody.trim()}
+            </pre>
+          </div>
+        );
+      }
+
+      // Even indices are regular markdown text
+      const lines = section.split("\n");
+      return (
+        <div key={idx} className="space-y-2">
+          {lines.map((line, lIdx) => {
+            const trimmed = line.trim();
+            if (!trimmed) return null;
+
+            if (trimmed.startsWith("# ")) {
+              return null; // The lesson title is already in card header
+            }
+            if (trimmed.startsWith("### ")) {
+              return (
+                <h4 key={lIdx} className="text-xs sm:text-sm font-bold text-indigo-300 pt-2 pb-0.5 border-b border-indigo-900/30 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                  {trimmed.replace(/^###\s*/, "")}
+                </h4>
+              );
+            }
+            if (trimmed.startsWith("## ")) {
+              return (
+                <h3 key={lIdx} className="text-sm font-bold text-white pt-2">
+                  {trimmed.replace(/^##\s*/, "")}
+                </h3>
+              );
+            }
+            if (trimmed.startsWith("- ")) {
+              return (
+                <div key={lIdx} className="flex items-start gap-2 text-xs text-slate-300 pl-2">
+                  <span className="text-indigo-400 font-bold">•</span>
+                  <span>{trimmed.replace(/^-\s*/, "")}</span>
+                </div>
+              );
+            }
+            return (
+              <p key={lIdx} className="text-xs text-slate-300 leading-relaxed">
+                {trimmed}
+              </p>
+            );
+          })}
+        </div>
+      );
+    });
+  }
 
   return (
     <RequireAuth>
@@ -310,6 +456,9 @@ export default function LearningPage() {
                 >
                   <span className="text-base">{t.icon}</span>
                   <span>{t.id === "python" ? "Python" : t.id === "algorithms" ? tDict.algorithms : "Django"}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-900/60 text-slate-300 font-mono">
+                    {t.lessons.length}
+                  </span>
                 </button>
               ))}
             </div>
@@ -323,7 +472,15 @@ export default function LearningPage() {
                 <span className="flex items-center gap-1.5">
                   <BookOpen className="w-3.5 h-3.5" /> {tDict.lessons}
                 </span>
-                <span>{currentTrack?.lessons.length || 0} {tDict.lessonSuffix}</span>
+                <span className="text-emerald-400 font-semibold">{currentTrack?.lessons.length || 0} {tDict.lessonSuffix}</span>
+              </div>
+
+              {/* Track progress indicator */}
+              <div className="px-2 py-1.5 flex items-center justify-between text-[11px] text-slate-400 bg-slate-900/40 rounded-xl">
+                <span>Dars: {currentLessonIndex !== -1 ? currentLessonIndex + 1 : 1} / {currentTrack?.lessons.length || 8}</span>
+                <span className="text-indigo-400 font-bold">
+                  {Math.round(((currentLessonIndex + 1) / (currentTrack?.lessons.length || 8)) * 100)}%
+                </span>
               </div>
 
               <div className="space-y-1.5 max-h-[620px] overflow-y-auto pr-1">
@@ -376,13 +533,13 @@ export default function LearningPage() {
                   <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-center space-y-2">
                     <Crown className="w-5 h-5 text-amber-400 fill-amber-400 mx-auto" />
                     <div className="text-xs font-bold text-amber-200">
-                      Barcha darslar va kod tekshiruvini oching!
+                      Barcha 24 ta dars va kod muharririni oching!
                     </div>
                     <Link
                       href="/premium"
-                      className="block w-full py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs shadow-md transition-all"
+                      className="block w-full py-2 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs shadow-md transition-all text-center"
                     >
-                      Premium (15 000 so'm)
+                      Plus Olish (40 000 so'm)
                     </Link>
                   </div>
                 </div>
@@ -392,19 +549,19 @@ export default function LearningPage() {
             {/* Middle: Theory & Exercise prompt (4 cols) */}
             <div className="lg:col-span-4 space-y-4">
               {/* Theory Card */}
-              <div className="bg-slate-800/60 rounded-3xl border border-slate-700/60 p-5 space-y-4">
+              <div className="bg-slate-800/60 rounded-3xl border border-slate-700/60 p-5 space-y-3">
                 <div className="flex items-center justify-between pb-3 border-b border-slate-700/50">
-                  <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1">
+                  <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
                     <Layers className="w-3.5 h-3.5" /> Dars Nazariyasi
                   </span>
-                  <span className="text-xs text-slate-400">{selectedLesson?.track_title}</span>
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300 font-medium">
+                    {selectedLesson?.track_title}
+                  </span>
                 </div>
 
-                <div className="prose prose-invert prose-sm max-h-[260px] overflow-y-auto pr-2 text-slate-300 space-y-3">
-                  <h3 className="text-base font-bold text-white">{selectedLesson?.title}</h3>
-                  <p className="text-xs leading-relaxed text-slate-300 whitespace-pre-line">
-                    {selectedLesson?.content}
-                  </p>
+                <div className="max-h-[300px] overflow-y-auto pr-2 space-y-2">
+                  <h3 className="text-sm font-extrabold text-white">{selectedLesson?.title}</h3>
+                  {selectedLesson?.content && renderContentBlocks(selectedLesson.content)}
                 </div>
               </div>
 
@@ -414,7 +571,7 @@ export default function LearningPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[11px] font-bold uppercase">
-                        Amaliy Topsiriq
+                        Amaliy Topshiriq
                       </span>
                       <span className="text-[11px] text-slate-400">Qiyinlik: {currentExercise.difficulty}</span>
                     </div>
@@ -422,7 +579,7 @@ export default function LearningPage() {
                     {currentExercise.hint && (
                       <button
                         onClick={() => setShowHint(!showHint)}
-                        className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1 font-medium transition-colors"
+                        className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1 font-medium transition-colors cursor-pointer"
                       >
                         <HelpCircle className="w-3.5 h-3.5" />
                         {showHint ? "Yashirish" : "Yordam (Hint)"}
@@ -463,7 +620,7 @@ export default function LearningPage() {
                     <button
                       onClick={handleResetCode}
                       title={tDict.resetTitle}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
                     </button>
@@ -502,14 +659,14 @@ export default function LearningPage() {
               </div>
 
               {/* Terminal Output */}
-              <div className="bg-slate-950 rounded-3xl border border-slate-800 p-4 space-y-2 font-mono text-xs">
+              <div className="bg-slate-950 rounded-3xl border border-slate-800 p-4 space-y-3 font-mono text-xs">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-800/80 text-slate-500">
                   <span className="flex items-center gap-1.5">
                     <Terminal className="w-3.5 h-3.5 text-slate-400" />
                     Terminal & Test Natijasi
                   </span>
                   {terminalOutput && (
-                    <span className={terminalOutput.success ? "text-emerald-400" : "text-rose-400"}>
+                    <span className={terminalOutput.success ? "text-emerald-400 font-semibold" : "text-rose-400 font-semibold"}>
                       Exit code: {terminalOutput.exit_code}
                     </span>
                   )}
@@ -517,17 +674,43 @@ export default function LearningPage() {
 
                 {/* Feedback pill */}
                 {terminalOutput?.feedback && (
-                  <div className={`p-2.5 rounded-xl flex items-center gap-2 font-sans font-medium text-xs ${
+                  <div className={`p-3 rounded-xl flex items-center justify-between gap-2 font-sans font-medium text-xs ${
                     terminalOutput.exercise_completed
-                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-lg shadow-emerald-500/10"
                       : "bg-amber-500/20 text-amber-300 border border-amber-500/40"
                   }`}>
-                    {terminalOutput.exercise_completed ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                    ) : (
-                      <XCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                    <div className="flex items-center gap-2">
+                      {terminalOutput.exercise_completed ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      ) : (
+                        <XCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                      )}
+                      <span>{terminalOutput.feedback}</span>
+                    </div>
+
+                    {/* Next Lesson Action Button */}
+                    {terminalOutput.exercise_completed && hasNextLesson && (
+                      <button
+                        onClick={handleNextLesson}
+                        className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1 transition-transform hover:scale-105 active:scale-95 shrink-0 cursor-pointer shadow"
+                      >
+                        <span>{tDict.nextLesson}</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
                     )}
-                    <span>{terminalOutput.feedback}</span>
+                  </div>
+                )}
+
+                {/* Course Completion Trophy Banner */}
+                {terminalOutput?.exercise_completed && !hasNextLesson && (
+                  <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-indigo-500/20 to-purple-500/20 border border-amber-500/40 text-center space-y-1.5 font-sans">
+                    <div className="flex items-center justify-center gap-2 text-amber-300 font-black text-xs">
+                      <Award className="w-4 h-4 text-amber-400" />
+                      {tDict.trackCompleted}
+                    </div>
+                    <p className="text-[11px] text-slate-300">
+                      Keyingi yo'nalishga o'ting va o'rganishda davom eting!
+                    </p>
                   </div>
                 )}
 
@@ -569,29 +752,29 @@ export default function LearningPage() {
                   Premium Laboratoriyani oching!
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                  Python, Django va Algoritmlar bo'yicha to'liq amaliy darslar va real-vaqtda kod yozish laboratoriyasi faqat <strong>TalabaGo Premium</strong> foydalanuvchilari uchun ochiq.
+                  Python, Django va Algoritmlar bo'yicha to'liq 24 ta dars va real-vaqtda kod yozish laboratoriyasi faqat <strong>TalabaGo Plus</strong> yoki <strong>Plus+</strong> obunachilari uchun ochiq.
                 </p>
               </div>
 
               <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/80 text-xs text-left space-y-2 text-slate-300">
                 <div className="flex items-center gap-2">
                   <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                  <span>Har bir to'g'ri test uchun <strong>1.2 ⭐ yulduz</strong></span>
+                  <span>Plus bilan <strong>1.3 ⭐</strong>, Plus+ bilan <strong>1.7 ⭐ yulduz</strong></span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Terminal className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Sayt ichida interaktiv kod muharriri</span>
+                  <span>24 ta interaktiv masterclass darslari</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Crown className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Narxi: <strong>atigi 15 000 so'm / oyiga</strong></span>
+                  <span>Narxi: <strong>TalabaGo Plus 40 000 so&apos;m</strong> / Plus+ <strong>65 000 so&apos;m</strong></span>
                 </div>
               </div>
 
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={() => setShowPremiumModal(false)}
-                  className="flex-1 py-3 px-4 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 font-bold text-xs transition-colors"
+                  className="flex-1 py-3 px-4 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 font-bold text-xs transition-colors cursor-pointer"
                 >
                   Keyinroq
                 </button>

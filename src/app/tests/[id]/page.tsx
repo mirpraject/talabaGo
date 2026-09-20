@@ -20,6 +20,8 @@ import {
   HelpCircle,
   Award,
   Crown,
+  Zap,
+  Shield,
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -28,6 +30,7 @@ import AIChat from "@/components/AIChat";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { api } from "@/lib/api";
+import { getTierConfig } from "@/lib/subscription";
 
 type Question = {
   id: number;
@@ -329,19 +332,38 @@ export default function TestDetailPage() {
                         <Star className="w-5 h-5 fill-amber-400 text-amber-500" />
                         <span>+{result.stars_earned} yulduz qo&apos;lga kiritildi!</span>
                       </div>
-                      {user?.is_premium ? (
-                        <div className="text-xs text-amber-700 font-semibold flex items-center gap-1">
-                          <Crown className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
-                          Premium stavka: Har bir to'g'ri javob uchun 1.2 ⭐ berildi!
-                        </div>
-                      ) : (
-                        <div className="text-xs text-slate-600 font-normal">
-                          Oddiy stavka: Har bir to'g'ri javob uchun 0.5 ⭐ berildi.{" "}
-                          <Link href="/premium" className="text-amber-700 font-bold underline hover:text-amber-800">
-                            Premiumda 1.2 ⭐ oling!
-                          </Link>
-                        </div>
-                      )}
+                      {(() => {
+                        const tier = user?.subscription_tier || "free";
+                        if (tier === "plus_plus") {
+                          return (
+                            <div className="text-xs text-amber-800 font-extrabold flex items-center gap-1.5">
+                              <Crown className="w-4 h-4 text-amber-600 fill-amber-500 animate-pulse" />
+                              <span>TalabaGo Plus+ stavkasi: Har bir to&apos;g&apos;ri javob uchun 1.7 ⭐ berildi! (Cheksiz test)</span>
+                            </div>
+                          );
+                        }
+                        if (tier === "plus") {
+                          return (
+                            <div className="text-xs text-emerald-800 font-bold flex flex-col items-center gap-0.5">
+                              <span className="flex items-center gap-1">
+                                <Zap className="w-3.5 h-3.5 text-emerald-600 fill-emerald-500" />
+                                TalabaGo Plus stavkasi: 1.3 ⭐ berildi!
+                              </span>
+                              <Link href="/premium" className="text-amber-800 font-semibold underline text-[11px] hover:text-amber-900">
+                                Plus+ da 1.7 ⭐ va cheksiz testlar oling →
+                              </Link>
+                            </div>
+                          );
+                        }
+                        return (
+                          <div className="text-xs text-slate-700 font-normal flex flex-col items-center gap-0.5">
+                            <span>Oddiy stavka: Har bir to&apos;g&apos;ri javob uchun 0.5 ⭐ berildi (150 ta test limit).</span>
+                            <Link href="/premium" className="text-amber-800 font-bold underline hover:text-amber-900 text-[11px]">
+                              Plus (1.3 ⭐) yoki Plus+ (1.7 ⭐) ga o&apos;tish →
+                            </Link>
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     <div className="flex items-center justify-center gap-3 flex-wrap">

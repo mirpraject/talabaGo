@@ -27,17 +27,26 @@ from .security_middleware import (
     SecurityHeadersMiddleware,
     RateLimiterMiddleware,
     RequestSizeLimiterMiddleware,
+    PathTraversalGuardMiddleware,
 )
+from .config import settings
+
+
 
 logger = logging.getLogger("studenthub")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
+# API docs faqat lokal ishlab chiqarish uchun ochiq
+# Ishlab chiqarishda docs_url=None qilib o'chiring
+_is_dev = settings.SECRET_KEY == "change-this-secret-key-in-production" or settings.DATABASE_URL.startswith("sqlite")
 
 app = FastAPI(
     title="StudentHUB API",
     description="O'zbekiston talabalari uchun xavfsiz akademik materiallar platformasi",
     version="0.3.0",
-    docs_url="/docs",
+    docs_url="/docs" if _is_dev else None,
     redoc_url=None,
+    openapi_url="/openapi.json" if _is_dev else None,
 )
 
 from fastapi.exceptions import RequestValidationError
@@ -81,16 +90,19 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"detail": "Serverda kutilmagan xatolik yuz berdi. Iltimos, qayta urinib ko'ring."},
     )
 
-# Security Middlewares (executed in order)
+# Security Middlewares (executed in reverse order — last added = first executed)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RateLimiterMiddleware)
 app.add_middleware(RequestSizeLimiterMiddleware)
+app.add_middleware(PathTraversalGuardMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.get_allowed_origins(),
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "X-Requested-With"],
+    max_age=3600,
 )
 
 # Include API routers

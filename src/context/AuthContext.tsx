@@ -21,6 +21,8 @@ export type User = {
   bio?: string | null;
   stars?: number;
   is_premium?: boolean;
+  subscription_tier?: "free" | "plus" | "plus_plus" | string;
+  tests_taken?: number;
   premium_expires?: string | null;
   created_at: string;
 };
@@ -42,7 +44,7 @@ type AuthContextType = {
     password: string;
   }) => Promise<void>;
   logout: () => void;
-  refreshUser: () => Promise<void>;
+  refreshUser: () => Promise<User | null>;
   authModalOpen: boolean;
   authModalMode: AuthModalMode;
   authRedirectPath?: string;
@@ -146,13 +148,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.refresh();
   }, [router]);
 
-  const refreshUser = useCallback(async () => {
-    if (!getToken()) return;
+  const refreshUser = useCallback(async (): Promise<User | null> => {
+    if (!getToken()) return null;
     try {
       const me = await api.get<User>("/api/auth/me");
       setUser(me);
+      return me;
     } catch {
-      /* ignore */
+      return null;
     }
   }, []);
 

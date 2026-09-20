@@ -20,320 +20,7 @@ from .auth import get_current_user
 
 router = APIRouter(prefix="/api/learning", tags=["learning"])
 
-# Educational curriculum data
-CURRICULUM = [
-    {
-        "id": "python",
-        "title": "Python Dasturlash Asoslari",
-        "description": "Noldan professional darajagacha Python: sintaksis, ma'lumot turlari, funksiyalar va OOP.",
-        "icon": "🐍",
-        "lessons": [
-            {
-                "id": "py-1",
-                "slug": "variables-and-data-types",
-                "title": "1-Dars: O'zgaruvchilar va Ma'lumot turlari",
-                "track": "python",
-                "track_title": "Python Asoslari",
-                "summary": "Python-da int, float, str, bool turlari bilan ishlash va f-string orqali formatlash.",
-                "content": """# 1-Dars: O'zgaruvchilar va Ma'lumot turlari
-
-Python - o'rganish oson, lekin nihoyatda kuchli dasturlash tili.
-
-### 1. O'zgaruvchilar e'lon qilish:
-```python
-ism = "Ali"           # str (matn)
-yosh = 20             # int (butun son)
-stipendiya = 750.50   # float (haqiqiy son)
-talabami = True       # bool (mantiqiy: True/False)
-```
-
-### 2. Formatlangan matn (f-strings):
-```python
-print(f"Salom, {ism}! Siz {yosh} yoshdasiz.")
-```
-
----
-### Amaliy vazifa:
-Quyidagi maydonda 2 ta son yig'indisini hisoblang va natijani `Natija: <yig'indi>` ko'rinishida chop eting.
-""",
-                "exercises": [
-                    {
-                        "id": "py-ex-1",
-                        "title": "Sonlar yig'indisi",
-                        "difficulty": "oson",
-                        "description": "a = 15 va b = 25 sonlarining yig'indisini toping va 'Natija: 40' deb print qiling.",
-                        "initial_code": "a = 15\nb = 25\n# Yig'indini hisoblang va 'Natija: ...' ko'rinishida chop eting\n",
-                        "test_cases": [
-                            {"expected_output": "Natija: 40"}
-                        ],
-                        "hint": "print(f'Natija: {a + b}') dan foydalaning.",
-                    }
-                ],
-            },
-            {
-                "id": "py-2",
-                "slug": "control-flow",
-                "title": "2-Dars: Shart operatorlari (if, elif, else)",
-                "track": "python",
-                "track_title": "Python Asoslari",
-                "summary": "Dastur oqimini shartlar yordamida boshqarish va mantiqiy amallar.",
-                "content": """# 2-Dars: Shart operatorlari (if, elif, else)
-
-Dasturlashda qaror qabul qilish uchun `if`, `elif` va `else` kalit so'zlari ishlatiladi.
-
-```python
-ball = 85
-
-if ball >= 90:
-    print("A'lo (5)")
-elif ball >= 70:
-    print("Yaxshi (4)")
-elif ball >= 60:
-    print("Qoniqarli (3)")
-else:
-    print("Qoniqarsiz (2)")
-```
-""",
-                "exercises": [
-                    {
-                        "id": "py-ex-2",
-                        "title": "Juft yoki toq son",
-                        "difficulty": "oson",
-                        "description": "Berilgan son juft bo'lsa 'Juft', aks holda 'Toq' deb chiqaring. (n = 42)",
-                        "initial_code": "n = 42\n# Shart operatori yordamida tekshiring:\n",
-                        "test_cases": [
-                            {"expected_output": "Juft"}
-                        ],
-                        "hint": "n % 2 == 0 bo'lsa 'Juft', aks holda 'Toq'.",
-                    }
-                ],
-            },
-            {
-                "id": "py-3",
-                "slug": "loops-and-lists",
-                "title": "3-Dars: Sikllar va Ro'yxatlar (Loops & Lists)",
-                "track": "python",
-                "track_title": "Python Asoslari",
-                "summary": "for, while sikllari va ro'yxat (list) metodlari.",
-                "content": """# 3-Dars: Sikllar va Ro'yxatlar
-
-Ro'yxatlar elementlar to'plamini saqlaydi:
-```python
-mevalar = ["olma", "anor", "shaftoli"]
-for meva in mevalar:
-    print(meva)
-```
-""",
-                "exercises": [
-                    {
-                        "id": "py-ex-3",
-                        "title": "Musbat sonlar yig'indisi",
-                        "difficulty": "o'rta",
-                        "description": "numbers = [10, -5, 20, -3, 15] ro'yxatidagi faqat musbat sonlar yig'indisini toping va chop eting.",
-                        "initial_code": "numbers = [10, -5, 20, -3, 15]\n# Faqat musbat sonlar yig'indisini toping\n",
-                        "test_cases": [
-                            {"expected_output": "45"}
-                        ],
-                        "hint": "sum([x for x in numbers if x > 0]) yoki for siklidan foydalaning.",
-                    }
-                ],
-            },
-            {
-                "id": "py-4",
-                "slug": "functions",
-                "title": "4-Dars: Funksiyalar va Qayta ishlatiluvchanlik",
-                "track": "python",
-                "track_title": "Python Asoslari",
-                "summary": "def kalit so'zi, parametrlar, return va recursion.",
-                "content": """# 4-Dars: Funksiyalar
-
-Funksiyalar bir xil kodni qayta-qayta yozmaslik imkonini beradi:
-```python
-def kvadrat(x):
-    return x * x
-```
-""",
-                "exercises": [
-                    {
-                        "id": "py-ex-4",
-                        "title": "Faktorial hisoblovchi funksiya",
-                        "difficulty": "o'rta",
-                        "description": "factorial(n) funksiyasini yarating va factorial(5) natijasini chop eting (120).",
-                        "initial_code": "def factorial(n):\n    # kodingizni yozing\n    pass\n\nprint(factorial(5))\n",
-                        "test_cases": [
-                            {"expected_output": "120"}
-                        ],
-                        "hint": "n == 1 bo'lsa 1, aks holda n * factorial(n-1).",
-                    }
-                ],
-            },
-        ],
-    },
-    {
-        "id": "algorithms",
-        "title": "Algoritmlar va Ma'lumotlar Tuzilmalari",
-        "description": "LeetCode va texnik intervyularga tayyorgarlik: Qidiruv, saralash, dinamik dasturlash.",
-        "icon": "⚡",
-        "lessons": [
-            {
-                "id": "algo-1",
-                "slug": "binary-search",
-                "title": "1-Dars: Ikkilik qidiruv (Binary Search)",
-                "track": "algorithms",
-                "track_title": "Algoritmlar",
-                "summary": "Tartiblangan massivda O(log N) tezlikda element qidirish algoritmi.",
-                "content": """# 1-Dars: Ikkilik qidiruv (Binary Search)
-
-Tartiblangan massivda qidiruvni O(log N) vaqtda bajarishning eng samarali usuli. Har bir qadamda qidiruv maydoni ikkiga bo'linadi.
-
-```python
-def binary_search(arr, target):
-    left, right = 0, len(arr) - 1
-    while left <= right:
-        mid = (left + right) // 2
-        if arr[mid] == target:
-            return mid
-        elif arr[mid] < target:
-            left = mid + 1
-        else:
-            right = mid - 1
-    return -1
-```
-""",
-                "exercises": [
-                    {
-                        "id": "algo-ex-1",
-                        "title": "Binary Search implementatsiyasi",
-                        "difficulty": "o'rta",
-                        "description": "Berilgan nums = [1, 3, 5, 7, 9, 11, 13] ro'yxatidan 9 sonining indeksini toping va print qiling.",
-                        "initial_code": "nums = [1, 3, 5, 7, 9, 11, 13]\ntarget = 9\n\n# Binary search yordamida indeksni toping va print qiling:\n",
-                        "test_cases": [
-                            {"expected_output": "4"}
-                        ],
-                        "hint": "Ikkilik qidiruv algoritmidan foydalaning.",
-                    }
-                ],
-            },
-            {
-                "id": "algo-2",
-                "slug": "two-pointers-and-sorting",
-                "title": "2-Dars: Two Pointers texnikasi & Two Sum",
-                "track": "algorithms",
-                "track_title": "Algoritmlar",
-                "summary": "O(N) vaqt murakkabligida massiv bilan ishlash texnikasi.",
-                "content": """# 2-Dars: Two Pointers texnikasi
-
-Ikki ko'rsatkich yordamida massivning boshi va oxiridan harakatlanish ko'plab masalalarni soddalashtiradi.
-""",
-                "exercises": [
-                    {
-                        "id": "algo-ex-2",
-                        "title": "Two Sum (Ikki son yig'indisi)",
-                        "difficulty": "o'rta",
-                        "description": "nums = [2, 7, 11, 15] va target = 9. Yig'indisi 9 ga teng bo'lgan ikki son indekslarini [0, 1] ko'rinishida chop eting.",
-                        "initial_code": "nums = [2, 7, 11, 15]\ntarget = 9\n\n# Indekslarni toping va print qiling (masalan: [0, 1])\n",
-                        "test_cases": [
-                            {"expected_output": "[0, 1]"}
-                        ],
-                        "hint": "Lug'at (hashmap) yoki ikki for siklidan foydalanishingiz mumkin.",
-                    }
-                ],
-            },
-            {
-                "id": "algo-3",
-                "slug": "stack-valid-parentheses",
-                "title": "3-Dars: Stack ma'lumotlar tuzilmasi va Qavslar",
-                "track": "algorithms",
-                "track_title": "Algoritmlar",
-                "summary": "LIFO (Last In First Out) prinsipi va amaliy qo'llanishi.",
-                "content": """# 3-Dars: Stack (Navbat/Stek)
-
-Stek - so'nggi kirgan element birinchi chiqadigan (LIFO) ma'lumot tuzilmasi.
-""",
-                "exercises": [
-                    {
-                        "id": "algo-ex-3",
-                        "title": "To'g'ri qavslar ketma-ketligi",
-                        "difficulty": "qiyin",
-                        "description": "s = '()[]{}' qavslari to'g'ri yopilgan bo'lsa True, aks holda False chiqaring.",
-                        "initial_code": "s = '()[]{}'\n\ndef is_valid(s: str) -> bool:\n    # Stack yordamida tekshiring\n    pass\n\nprint(is_valid(s))\n",
-                        "test_cases": [
-                            {"expected_output": "True"}
-                        ],
-                        "hint": "Ochuvchi qavslarni stack ga soling, yopuvchi kelganda mosligini tekshiring.",
-                    }
-                ],
-            },
-        ],
-    },
-    {
-        "id": "django",
-        "title": "Django Web Framework & REST API",
-        "description": "Zamonaviy backend veb dasturlash: Modellar, ORM, APIView, Serializers va Autentifikatsiya.",
-        "icon": "🌐",
-        "lessons": [
-            {
-                "id": "dj-1",
-                "slug": "models-and-orm",
-                "title": "1-Dars: Django Modellar va ORM so'rovlari",
-                "track": "django",
-                "track_title": "Django Framework",
-                "summary": "SQL yozmasdan ma'lumotlar bazasi bilan ishlash - Django ORM.",
-                "content": """# 1-Dars: Django Modellar va ORM
-
-Django ORM yordamida Python klasslari ma'lumotlar bazasi jadvallariga aylanadi.
-
-```python
-# Masalan:
-class Student:
-    def __init__(self, name, stars, is_premium=False):
-        self.name = name
-        self.stars = stars
-        self.is_premium = is_premium
-```
-""",
-                "exercises": [
-                    {
-                        "id": "dj-ex-1",
-                        "title": "Django uslubida Model va Filter yaratish",
-                        "difficulty": "o'rta",
-                        "description": "Talabalar ro'yxatidan faqat is_premium=True bo'lgan talabalar ismlarini chop eting.",
-                        "initial_code": "students = [\n    {'name': 'Jasur', 'stars': 50, 'is_premium': True},\n    {'name': 'Madina', 'stars': 20, 'is_premium': False},\n    {'name': 'Aziz', 'stars': 85, 'is_premium': True},\n]\n\n# Faqat premium talabalar ismlarini vergul bilan chop eting (masalan: 'Jasur, Aziz')\n",
-                        "test_cases": [
-                            {"expected_output": "Jasur, Aziz"}
-                        ],
-                        "hint": "filter yoki list comprehension: ', '.join([s['name'] for s in students if s['is_premium']])",
-                    }
-                ],
-            },
-            {
-                "id": "dj-2",
-                "slug": "api-serializers",
-                "title": "2-Dars: Django REST Framework & Serializers",
-                "track": "django",
-                "track_title": "Django Framework",
-                "summary": "Ma'lumotlarni JSON ko'rinishida formatlash va validatsiya qilish.",
-                "content": """# 2-Dars: DRF Serializers
-
-API yaratishda ma'lumotlarni tekshirish va JSON formatiga o'tkazish serializerlar orqali amalga oshiriladi.
-""",
-                "exercises": [
-                    {
-                        "id": "dj-ex-2",
-                        "title": "JSON Response generatsiyasi",
-                        "difficulty": "o'rta",
-                        "description": "import json yordamida {'status': 'success', 'code': 200} lug'atini JSON satriga aylantirib chop eting.",
-                        "initial_code": "import json\n\ndata = {'status': 'success', 'code': 200}\n# JSON string ko'rinishida chop eting:\n",
-                        "test_cases": [
-                            {"expected_output": '{"status": "success", "code": 200}'}
-                        ],
-                        "hint": "json.dumps(data) dan foydalaning.",
-                    }
-                ],
-            },
-        ],
-    },
-]
+from ..curriculum_data import CURRICULUM
 
 
 @router.get("/tracks", response_model=list[TrackOut])
@@ -410,24 +97,123 @@ def get_lesson(track_id: str, slug: str):
     raise HTTPException(status_code=404, detail="Dars topilmadi")
 
 
-# Security guard for code execution
-FORBIDDEN_KEYWORDS = [
-    "import os",
-    "from os",
-    "import subprocess",
-    "from subprocess",
-    "import sys",
-    "from sys",
-    "shutil",
-    "__import__",
-    "eval(",
-    "exec(",
-    "open(",
-    "socket",
-    "requests",
-    "urllib",
-    "rmtree",
+# ==============================================================================
+# Kod bajarish xavfsizlik qatlami — Ko'p darajali himoya
+# ==============================================================================
+
+# 1-qatlam: To'g'ridan-to'g'ri taqiqlangan kalit so'zlar va funksiya chaqiruvlari
+_FORBIDDEN_PATTERNS = [
+    # Tizim modullari
+    "import os",      "from os",        "import sys",     "from sys",
+    "import subprocess", "from subprocess", "import shutil",  "from shutil",
+    "import socket",  "from socket",    "import requests", "from requests",
+    "import urllib",  "from urllib",    "import http",    "from http",
+    "import ftplib",  "from ftplib",    "import smtplib", "from smtplib",
+    "import pathlib", "from pathlib",   "import glob",    "from glob",
+    "import tempfile","from tempfile",  "import pickle",  "from pickle",
+    "import marshal", "from marshal",   "import ctypes",  "from ctypes",
+    "import cffi",    "from cffi",      "import mmap",    "from mmap",
+    "import pty",     "import tty",     "import termios",
+    "import signal",  "from signal",    "import resource",
+    "import threading","from threading", "import multiprocessing",
+    "import asyncio", "from asyncio",   "import concurrent",
+    # Xavfli built-in funksiyalar
+    "__import__(",    "eval(",          "exec(",          "compile(",
+    "open(",          "globals(",       "locals(",        "vars(",
+    "dir(",           "delattr(",       "setattr(",       "getattr(",
+    "__builtins__",   "__class__",      "__bases__",      "__subclasses__",
+    "__dict__",       "__code__",       "__globals__",    "__module__",
+    "__reduce__",     "__reduce_ex__",  "__getattribute__",
+    # Fayl tizimi
+    "rmtree",         "remove(",        "unlink(",        "chmod(",
+    "chown(",         "mkdir(",         "makedirs(",      "rename(",
+    # Tarmoq
+    "socket(",        "urlopen(",       "urlretrieve(",   "Request(",
+    "urlopen(",       "connect(",       "bind(",          "listen(",
+    # Shell bajarish
+    "Popen(",         "call(",          "check_call(",    "check_output(",
+    "system(",        "popen(",         "spawn",          "fork(",
+    # Kodlash bilan bypass
+    "chr(",           "ord(",           "bytes(",         "bytearray(",
+    "base64",         "codecs",         "zlib",           "gzip",
+    # Refleksiya / introspeksiya
+    "type(",          "isinstance(",    "issubclass(",    "hasattr(",
+    # Maxsus atributlar orqali bypass
+    ".__",
 ]
+
+# 2-qatlam: regex asosida xavfli naqshlar
+import re as _re
+
+_DANGEROUS_REGEX = [
+    # Obfuskatsiya: getattr(obj, "os") yoki similar
+    _re.compile(r'getattr\s*\(', _re.IGNORECASE),
+    # __import__("os") yoki __import__('subprocess')
+    _re.compile(r'__import__\s*\(', _re.IGNORECASE),
+    # open() faylga kirish
+    _re.compile(r'\bopen\s*\(', _re.IGNORECASE),
+    # chr() bilan string qurish
+    _re.compile(r'chr\s*\(\s*\d+', _re.IGNORECASE),
+    # Hex yoki octal yordamida import bypass
+    _re.compile(r'\\x[0-9a-f]{2}', _re.IGNORECASE),
+    # Subclasses orqali bypass: ().__class__.__mro__
+    _re.compile(r'__class__\s*\.\s*__', _re.IGNORECASE),
+    _re.compile(r'__subclasses__\s*\(', _re.IGNORECASE),
+    _re.compile(r'__mro__', _re.IGNORECASE),
+    # exec(compile(...))
+    _re.compile(r'\bexec\s*\(', _re.IGNORECASE),
+    _re.compile(r'\beval\s*\(', _re.IGNORECASE),
+    _re.compile(r'\bcompile\s*\(', _re.IGNORECASE),
+]
+
+# Ruxsat etilgan stdlib modullari (whitelist)
+_ALLOWED_IMPORTS = {
+    "math", "random", "datetime", "time", "collections",
+    "itertools", "functools", "string", "re", "json",
+    "fractions", "decimal", "statistics", "heapq", "bisect",
+    "copy", "pprint", "textwrap", "enum", "dataclasses",
+    "typing", "abc", "operator",
+}
+
+_IMPORT_RE = _re.compile(r'^\s*(?:import|from)\s+(\w+)', _re.MULTILINE)
+
+MAX_CODE_LENGTH = 4096   # 4 KB — ortiqcha uzun kod xavfli
+MAX_CODE_LINES = 150     # 150 qatordan oshmasin
+
+
+def _scan_code_safety(code: str) -> str | None:
+    """
+    Kodda xavfli elementlar borligini tekshiradi.
+    Topilsa xatolik xabarini qaytaradi, aks holda None.
+    """
+    # Hajm chegarasi
+    if len(code) > MAX_CODE_LENGTH:
+        return f"Kod juda uzun (max {MAX_CODE_LENGTH} belgi ruxsat etiladi)."
+    if code.count("\n") > MAX_CODE_LINES:
+        return f"Kod juda ko'p qatordan iborat (max {MAX_CODE_LINES} qator)."
+
+    # 1-qatlam: oddiy string qidiruv
+    lower_code = code.lower()
+    for pattern in _FORBIDDEN_PATTERNS:
+        if pattern.lower() in lower_code:
+            safe_pat = pattern.strip().replace("\n", "")
+            return f"Xavfsizlik qoidasi: '{safe_pat}' ishlatish taqiqlangan!"
+
+    # 2-qatlam: regex qidiruv
+    for regex in _DANGEROUS_REGEX:
+        if regex.search(code):
+            return "Xavfli kod naqshi aniqlandi (eval/exec/getattr/subclasses va h.k.)."
+
+    # 3-qatlam: import whitelist
+    for match in _IMPORT_RE.finditer(code):
+        mod = match.group(1).lower()
+        if mod not in _ALLOWED_IMPORTS:
+            return (
+                f"'{mod}' moduli ruxsat etilmagan. "
+                f"Faqat ruxsat etilganlar: {', '.join(sorted(_ALLOWED_IMPORTS))}."
+            )
+
+    return None  # xavfsiz
 
 
 @router.post("/run", response_model=CodeRunResponse)
@@ -444,21 +230,22 @@ def execute_code(
         if payload.exercise_id and payload.exercise_id not in {"py-ex-1"}:
             raise HTTPException(
                 status_code=403,
-                detail="Dasturlash amaliy laboratoriyasi (Python, Django, Algoritmlar) faqat Premium obunachilar uchun ochiq! Obunani atigi 15 000 so'mga faollashtiring.",
+                detail="Dasturlash amaliy laboratoriyasi (Python, Django, Algoritmlar) TalabaGo Plus va Plus+ obunachilari uchun ochiq! Obunani faollashtiring (TalabaGo Plus: 40 000 so'm yoki Plus+: 65 000 so'm).",
             )
 
     code = payload.code
-    # Basic security check
-    for bad in FORBIDDEN_KEYWORDS:
-        if bad in code:
-            return CodeRunResponse(
-                stdout="",
-                stderr=f"Xavfsizlik qoidasi: '{bad}' ishlatish taqiqlangan!",
-                exit_code=1,
-                success=False,
-                exercise_completed=False,
-                feedback="Kodda xavfli amallar aniqlandi.",
-            )
+    # Ko'p darajali xavfsizlik tekshiruvi
+    safety_error = _scan_code_safety(code)
+    if safety_error:
+        return CodeRunResponse(
+            stdout="",
+            stderr=safety_error,
+            exit_code=1,
+            success=False,
+            exercise_completed=False,
+            feedback="Kodda xavfli amallar aniqlandi. Faqat sof Python algoritmlarini yozing.",
+        )
+
 
     # Execute code in temp file with timeout
     try:

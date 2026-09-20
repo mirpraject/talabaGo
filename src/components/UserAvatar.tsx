@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
+import { Crown, Zap } from "lucide-react";
 
 interface UserAvatarProps {
   studentId?: string | null;
   avatarUrl?: string | null;
   name?: string | null;
+  tier?: string | null;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   className?: string;
   showBadge?: boolean;
@@ -15,6 +17,7 @@ export default function UserAvatar({
   studentId,
   avatarUrl,
   name,
+  tier = "free",
   size = "md",
   className = "",
   showBadge = false,
@@ -56,14 +59,20 @@ export default function UserAvatar({
   };
 
   const initial = (name || studentId || "S").trim().charAt(0).toUpperCase();
-
-  // Final fallback image URL using DiceBear Bottts (distinctive robot/student avatar for each student_id)
   const defaultUrl = avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(seed)}`;
+
+  // Subscription tier borders & rings
+  const tierBorderClasses =
+    tier === "plus_plus"
+      ? "border-2 border-amber-300 ring-2 ring-amber-400/80 shadow-md shadow-amber-500/30"
+      : tier === "plus"
+      ? "border-2 border-emerald-300 ring-2 ring-emerald-400/70 shadow-sm shadow-emerald-500/25"
+      : "border-2 border-white/80 shadow-sm";
 
   return (
     <div className={`relative inline-flex flex-col items-center shrink-0 ${className}`}>
       <div
-        className={`${sizeClasses[size]} relative rounded-full overflow-hidden border-2 border-white/80 shadow-sm flex items-center justify-center bg-gradient-to-tr ${bgGrad} text-white font-bold select-none`}
+        className={`${sizeClasses[size]} relative rounded-full overflow-hidden ${tierBorderClasses} flex items-center justify-center bg-gradient-to-tr ${bgGrad} text-white font-bold select-none transition-all duration-300`}
       >
         {!imgError ? (
           <img
@@ -77,6 +86,18 @@ export default function UserAvatar({
           <span>{initial}</span>
         )}
       </div>
+
+      {/* Mini floating tier icon for Plus and Plus+ */}
+      {tier === "plus_plus" && size !== "xs" && (
+        <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center shadow-md border border-amber-300 z-10">
+          <Crown className="w-2.5 h-2.5 fill-slate-950" />
+        </span>
+      )}
+      {tier === "plus" && size !== "xs" && (
+        <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center shadow-md border border-emerald-300 z-10">
+          <Zap className="w-2 h-2 fill-slate-950" />
+        </span>
+      )}
 
       {showBadge && studentId && (
         <span

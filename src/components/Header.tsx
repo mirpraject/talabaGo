@@ -6,13 +6,16 @@ import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { Menu, X, Globe, Check, Star, GraduationCap } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
+import UserAvatar from "@/components/UserAvatar";
+import { getTierConfig } from "@/lib/subscription";
 import type { Lang } from "@/lib/translations";
 
 const langOptions: { code: Lang; label: string; flag: string }[] = [
   { code: "uz",  label: "O'zbek",      flag: "🇺🇿" },
   { code: "kaa", label: "Qaraqalpaq",  flag: "🌐" },
-  { code: "en",  label: "English",     flag: "🇬🇧" },
+  { code: "kr",  label: "Кирилча",     flag: "🇺🇿" },
   { code: "ru",  label: "Русский",     flag: "🇷🇺" },
+  { code: "en",  label: "English",     flag: "🇬🇧" },
 ];
 
 export default function Header() {
@@ -22,6 +25,7 @@ export default function Header() {
   const [langOpen, setLangOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
+  const tierConfig = getTierConfig(user);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -112,12 +116,33 @@ export default function Header() {
                 )}
               </div>
 
-              {/* Stars (mobile) */}
+              {/* Logged-in User Chip & Stars */}
               {user && (
-                <Link href="/rewards" className="stars-chip text-xs lg:hidden">
-                  <Star className="w-3 h-3 fill-amber-400" />
-                  {Number(user.stars || 0).toFixed(0)}
-                </Link>
+                <>
+                  <Link href="/rewards" className="stars-chip text-xs">
+                    <Star className="w-3 h-3 fill-amber-400" />
+                    <span>{Number(user.stars || 0).toFixed(1)}</span>
+                  </Link>
+                  <Link
+                    href="/profile"
+                    className={`flex items-center gap-2 py-1 px-2.5 rounded-xl border transition-all hover:scale-105 active:scale-95 ${tierConfig.cardBg} ${tierConfig.borderClass}`}
+                    title={`${user.full_name || user.username} (${tierConfig.name})`}
+                  >
+                    <UserAvatar
+                      studentId={user.student_id}
+                      avatarUrl={user.avatar_url}
+                      name={user.full_name || user.username}
+                      tier={user.subscription_tier}
+                      size="xs"
+                    />
+                    <span className="text-xs font-bold text-slate-200 hidden sm:inline max-w-[100px] truncate">
+                      {user.full_name || user.username}
+                    </span>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold uppercase ${tierConfig.badgeClass}`}>
+                      {tierConfig.badge}
+                    </span>
+                  </Link>
+                </>
               )}
 
               {/* Auth buttons (guest) */}
