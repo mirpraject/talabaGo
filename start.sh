@@ -88,11 +88,23 @@ fi
 cd "$APP_DIR"
 
 # ─── 3. FastAPI uvicorn fon jarayoni ──────────────────────────
-echo "[3/3] FastAPI ishga tushirilmoqda (port 8000)..."
+PUBLIC_PORT="${PORT:-8080}"
+BACKEND_PORT="${BACKEND_PORT:-8000}"
+
+# Agar tashqi port va ichki backend port bir xil bo'lib qolsa, to'qnashuv bo'lmasligi uchun backendni 8001 ga ko'chiramiz
+if [ "$PUBLIC_PORT" = "$BACKEND_PORT" ]; then
+    BACKEND_PORT="8001"
+fi
+
+export INTERNAL_API_URL="http://127.0.0.1:$BACKEND_PORT"
+export BACKEND_PORT="$BACKEND_PORT"
+export PYTHONPATH="$APP_DIR:$PYTHONPATH"
+
+echo "[3/3] FastAPI ishga tushirilmoqda (ichki port $BACKEND_PORT)..."
 cd "$APP_DIR"
 $PY -m uvicorn server.main:app \
-    --host 127.0.0.1 \
-    --port 8000 \
+    --host 0.0.0.0 \
+    --port "$BACKEND_PORT" \
     --log-level info \
     --workers 1 &
 BACKEND_PID=$!
@@ -109,12 +121,12 @@ for i in $(seq 1 30); do
     if $PY -c "
 import urllib.request
 try:
-    urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)
+    urllib.request.urlopen('http://127.0.0.1:$BACKEND_PORT/health', timeout=2)
     exit(0)
 except:
     exit(1)
 " >/dev/null 2>&1; then
-        echo "[OK] FastAPI muvaffaqiyatli tayyor! (${i}s)"
+        echo "[OK] FastAPI muvaffaqiyatli tayyor! (${i}s, port: $BACKEND_PORT)"
         READY=1
         break
     fi
@@ -122,9 +134,8 @@ done
 [ $READY -eq 0 ] && echo "[!] FastAPI kutish yakunlandi, davom etilmoqda..."
 
 # ─── 4. Next.js asosiy jarayon ────────────────────────────────
-PUBLIC_PORT="${PORT:-3000}"
 echo "======================================================="
-echo "  FastAPI:  http://127.0.0.1:8000  (ichki)"
+echo "  FastAPI:  http://127.0.0.1:$BACKEND_PORT  (ichki)"
 echo "  Next.js:  http://0.0.0.0:$PUBLIC_PORT  (tashqi)"
 echo "======================================================="
 

@@ -28,12 +28,14 @@ const nextConfig = {
     ];
   },
   async rewrites() {
+    const backendPort = process.env.BACKEND_PORT || '8000';
+    const backendHost = process.env.INTERNAL_API_URL || process.env.BACKEND_URL || `http://127.0.0.1:${backendPort}`;
     return [
-      { source: '/api/:path*',     destination: 'http://127.0.0.1:8000/api/:path*' },
-      { source: '/uploads/:path*', destination: 'http://127.0.0.1:8000/uploads/:path*' },
-      { source: '/docs',           destination: 'http://127.0.0.1:8000/docs' },
-      { source: '/health',         destination: 'http://127.0.0.1:8000/health' },
-      { source: '/openapi.json',   destination: 'http://127.0.0.1:8000/openapi.json' },
+      { source: '/api/:path*',     destination: `${backendHost}/api/:path*` },
+      { source: '/uploads/:path*', destination: `${backendHost}/uploads/:path*` },
+      { source: '/docs',           destination: `${backendHost}/docs` },
+      { source: '/health',         destination: `${backendHost}/health` },
+      { source: '/openapi.json',   destination: `${backendHost}/openapi.json` },
     ];
   },
 };

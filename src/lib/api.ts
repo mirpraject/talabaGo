@@ -4,12 +4,14 @@ export function getApiUrl(): string {
       window.location.hostname === "localhost" ||
       window.location.hostname === "127.0.0.1";
     if (!isLocal) {
-      // Production domain: always use relative URL so Next.js proxy / rewrites handle it seamlessly
-      return "";
+      // Production domain: agar alohida backend domeni berilgan bo'lsa uni oladi, aks holda Next.js rewrites ishlatiladi
+      return process.env.NEXT_PUBLIC_API_URL || "";
     }
-    return process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+    const localPort = process.env.NEXT_PUBLIC_API_PORT || process.env.BACKEND_PORT || "8000";
+    return process.env.NEXT_PUBLIC_API_URL || `http://127.0.0.1:${localPort}`;
   }
-  return process.env.INTERNAL_API_URL || "http://127.0.0.1:8000";
+  const backendPort = process.env.BACKEND_PORT || "8000";
+  return process.env.INTERNAL_API_URL || `http://127.0.0.1:${backendPort}`;
 }
 
 export const API_URL = "";
