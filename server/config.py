@@ -21,6 +21,13 @@ class Settings(BaseSettings):
     OPENAI_BASE_URL: str = "https://api.openai.com/v1"
     OPENAI_MODEL: str = "gpt-4o-mini"
 
+    GEMINI_API_KEY: str | None = None
+    GEMINI_MODEL: str = "gemini-3-flash-preview"
+
+    @property
+    def has_ai_key(self) -> bool:
+        return bool(self.GEMINI_API_KEY or self.OPENAI_API_KEY)
+
     class Config:
         env_file = ".env"
 

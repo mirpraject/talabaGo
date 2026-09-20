@@ -126,7 +126,7 @@ async def chat(
     files = find_relevant(db, data.message)
     reply = build_local_answer(data.message, files)
 
-    if settings.OPENAI_API_KEY:
+    if settings.has_ai_key:
         ai_reply = await chat_completion(
             build_prompt(db, data.message), data.message
         )
@@ -186,7 +186,7 @@ async def generate_report(
     data: GenerateReportRequest,
     current_user: User = Depends(get_current_user),
 ):
-    if not settings.OPENAI_API_KEY:
+    if not settings.has_ai_key:
         return local_report(data.topic, data.length)
 
     system = "Siz professional talaba va o'quvchilarga referat yozishda yordam beruvchi AI yordamchisisiz."
@@ -300,7 +300,7 @@ async def generate_test(
             .first()
         )
 
-    if settings.OPENAI_API_KEY:
+    if settings.has_ai_key:
         system = f"{TEST_LANG_SYSTEM.get(data.language, TEST_LANG_SYSTEM['uz'])}. Natijani quyidagi JSON formatda qaytaring: {{\"questions\":[{{\"question\":\"...\",\"options\":[\"a\",\"b\",\"c\",\"d\"],\"correct\":\"A\",\"explanation\":\"...\"}}]}}"
         user = f"«{data.topic}» mavzusida {data.question_count} ta test savoli yarating."
         raw = await chat_completion(system, user, temperature=0.8)
