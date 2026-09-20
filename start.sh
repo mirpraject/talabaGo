@@ -24,11 +24,13 @@ fi
 echo "[*] $($PY --version 2>&1)"
 echo "[*] Node $(node --version 2>&1)"
 
-# Python paketlari (ildiz requirements.txt)
-if ! $PY -c "import uvicorn" >/dev/null 2>&1; then
-    echo "[*] Paketlar o'rnatilmoqda..."
-    $PY -m pip install --quiet -r "$APP_DIR/requirements.txt" || true
-fi
+# Python paketlarini doim o'rnatish (cache bo'lsa ham, --no-deps orqali tez)
+echo "[*] Python paketlari tekshirilmoqda va o'rnatilmoqda..."
+$PY -m pip install --quiet -r "$APP_DIR/requirements.txt" || {
+    echo "[!] pip install XATOLIK!"
+    $PY -m pip install -r "$APP_DIR/requirements.txt"
+}
+echo "[*] Python paketlari tayyor."
 
 # ─── 1. Baza tayyorlash ────────────────────────────────────────
 echo "[1/3] Baza tayyorlanmoqda..."
@@ -91,7 +93,7 @@ cd "$APP_DIR"
 PUBLIC_PORT="${PORT:-8080}"
 BACKEND_PORT="${BACKEND_PORT:-8000}"
 
-# Agar tashqi port va ichki backend port bir xil bo'lib qolsa, to'qnashuv bo'lmasligi uchun backendni 8001 ga ko'chiramiz
+# Agar tashqi port va ichki backend port bir xil bo'lib qolsa, to'qnashuv oldini olamiz
 if [ "$PUBLIC_PORT" = "$BACKEND_PORT" ]; then
     BACKEND_PORT="8001"
 fi
@@ -99,6 +101,24 @@ fi
 export INTERNAL_API_URL="http://127.0.0.1:$BACKEND_PORT"
 export BACKEND_PORT="$BACKEND_PORT"
 export PYTHONPATH="$APP_DIR:$PYTHONPATH"
+
+echo "[3/3] FastAPI import tekshirilmoqda..."
+# FastAPI import qilib bo'ladimi tekshiramiz (agar xatolik bo'lsa — log da ko'rinadi)
+$PY -c "
+import sys
+sys.path.insert(0, '.')
+try:
+    import httpx
+    import fastapi
+    import uvicorn
+    from server.main import app
+    print('[OK] FastAPI import muvaffaqiyatli.')
+except Exception as e:
+    import traceback
+    print(f'[XATOLIK] FastAPI import CRASH: {e}')
+    traceback.print_exc()
+    sys.exit(1)
+" 2>&1 || { echo "[KRITIK] FastAPI import xatosi! Server ishga tushmaydi."; exit 1; }
 
 echo "[3/3] FastAPI ishga tushirilmoqda (ichki port $BACKEND_PORT)..."
 cd "$APP_DIR"
@@ -110,12 +130,13 @@ $PY -m uvicorn server.main:app \
 BACKEND_PID=$!
 echo "[*] FastAPI PID: $BACKEND_PID"
 
-# Backend tayyor bo'lishini kutish (max 30s)
+# Backend tayyor bo'lishini kutish (max 45s)
 READY=0
-for i in $(seq 1 30); do
+for i in $(seq 1 45); do
     sleep 1
     if ! kill -0 $BACKEND_PID 2>/dev/null; then
         echo "[XATOLIK] FastAPI jarayoni to'xtab qoldi (PID: $BACKEND_PID)!"
+        echo "[HINT] 'railway logs' da Python xatoligini ko'ring."
         break
     fi
     if $PY -c "
